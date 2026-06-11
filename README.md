@@ -1,140 +1,190 @@
-# Life in Weeks – Obsidian-Plugin
+# Life in Weeks – Obsidian Plugin
 
-Port der [Single-File-Browser-App](../lifeweeks.html) als natives Obsidian-Plugin. Rendert ein „Life in Weeks"-Grid (Standard: 90 Jahre × 52 Wochen = 4680 Zellen) über die Wochen- und Tagesnotizen im Vault.
+A "Life in Weeks" grid (default: 90 years × 52 weeks = 4680 cells) rendered over the weekly and daily notes in your vault. Click a cell to open the note, long-press for the day view.
+
+> Port of the standalone [browser app](../lifeweeks.html) as a native Obsidian plugin. Both write the same Markdown files and can be used in parallel.
+
+## Installation
+
+### Option A: Obsidian Community Plugins (once approved)
+
+1. Open **Settings → Community plugins**
+2. Disable restricted mode if needed
+3. **Browse** → search for "Life in Weeks"
+4. **Install** → **Enable**
+5. Click the calendar icon in the left sidebar
+
+### Option B: BRAT (beta testers, while review is pending)
+
+1. Install the [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin from Community Plugins
+2. Open BRAT settings → **Add Beta plugin**
+3. Paste: `Micha12323/lifeweeks-obsidian`
+4. Enable **Life in Weeks** under Community plugins
+5. Click the calendar icon in the left sidebar
+
+### Option C: Manual install
+
+1. Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Micha12323/lifeweeks-obsidian/releases/latest)
+2. Copy them into `<your-vault>/.obsidian/plugins/lifeweeks/` (create the folder)
+3. In Obsidian: **Settings → Community plugins → Reload**, then enable **Life in Weeks**
+
+### First start
+
+A setup screen asks for:
+- **Birth date** (`YYYY-MM-DD`)
+- **Life expectancy** in years (number of grid rows, default 90)
+- **Base folder** in your vault (default `Bibliothek/Diary` – change it to wherever you want `Weekly basis/` and `Daily basis/` to live, e.g. `Journal`)
+
+Tabs are auto-detected from the subfolders of `Weekly basis/` – no separate configuration needed.
 
 ## Features
 
-| Feature | Bedienung |
+| Feature | How to use |
 |---|---|
-| Wochennotiz öffnen | Kurzer Klick auf eine Zelle **mit** Notiz |
-| Farbe + Titel setzen / Notiz anlegen | Klick auf leere Zelle, **Rechtsklick** auf belegte Zelle |
-| Tagesansicht (Mo–So) + Wochen-Farbe | **Long-Press** (½ Sekunde) auf eine Zelle |
-| Mehrfachauswahl + Bulk-Edit | Button **⊞ Mehrfach** + Drag-to-Select |
-| Zeitraum auswählen | Button **📅 Zeitraum** (Von/Bis) |
-| Zoom | Slider (Mitte = Fensterbreite, rechts = reinzoomen), **Strg+Mausrad**, **Pinch** (Mobile) |
-| Tab anlegen | **+** in der Tab-Leiste – legt Ordner unter `Weekly basis/` an |
-| Eigene Zeitachse pro Tab | ⚙ am aktiven Tab |
-| Legende pro Tab | Editierbar (Farben, Labels, Reihenfolge, eigene Einträge) |
-| Sprache | Folgt der Obsidian-Sprache (DE/EN voll, sonst EN-Fallback; Datums-/Wochentagsformate via `Intl` in **allen** Sprachen) |
-| Öffnen-Modus | „Notizen öffnen in": Automatisch / Split rechts / Haupt-Tableiste |
+| Open a weekly note | Short click on a cell **with** a note |
+| Set color/title or create a note | Click on an empty cell; **right-click** on a cell with a note |
+| Day view (Mon–Sun) + weekly color | **Long-press** (½ second) on a cell |
+| Multi-select + bulk edit | **⊞ Multi-select** button + drag-to-select |
+| Date range selection | **📅 Date range** button (From/To) |
+| Zoom | Slider (middle = fit width, right = zoom in), **Ctrl+wheel**, **pinch** (mobile) |
+| New tab | **+** in the tab bar – creates a folder under `Weekly basis/` |
+| Per-tab timeline | ⚙ on the active tab |
+| Per-tab legend | Editable (colors, labels, order, custom entries) |
+| Language | Follows the Obsidian language (DE/EN UI, all locales for date formats via `Intl`) |
+| Open mode | "Open notes in": Automatic / Split right / Main tab bar |
 
-## Datenstruktur im Vault
+## Click behavior
 
-Identisch zur Browser-App – beide bleiben parallel nutzbar.
-
-```
-{Basisordner}/                  # Standard: Bibliothek/Diary
-├─ Weekly basis/
-│  ├─ {Tab1}/                   # Tab-Name = Ordnername
-│  │  ├─ 2026-04-06-W14 Urlaub.md
-│  │  └─ attachments/
-│  └─ {Tab2}/…
-└─ Daily basis/                 # flat (oder Daily basis/{Tab}/ pro Tab)
-   └─ 2026-04-14.md
-```
-
-**Dateinamen:** `yyyy-mm-dd-Www[ Titel].md` (Wocheneinträge), `yyyy-mm-dd[ Titel].md` (Tageseinträge).
-**Frontmatter** wird per `app.fileManager.processFrontMatter()` gepflegt – fremde Keys (z.B. `date`/`time`/`tags` in Alt-Dailies) bleiben **unberührt**.
-
-## Bedienung im Detail
-
-### Klick-Verhalten auf einer Zelle
-
-| Aktion | Woche **mit** Notiz | Woche **ohne** Notiz |
+| Action | Cell **with** note | Cell **without** note |
 |---|---|---|
-| Kurzer Klick | öffnet die Notiz | Quick-Edit (Farbe/Titel/anlegen) |
-| Rechtsklick | Quick-Edit zum Nachjustieren | Quick-Edit |
-| Long-Press | Tagesansicht + Wochen-Palette | Tagesansicht + Wochen-Palette |
+| Short click | opens the note | Quick-Edit popover (color/title/create) |
+| Right-click | Quick-Edit for tweaking | Quick-Edit |
+| Long-press | Day view + weekly palette | Day view + weekly palette |
 
-### Farbe nachträglich ändern
+### Changing the color afterwards
 
-1. **Rechtsklick** auf die Zelle → Palette im Popover (Desktop)
-2. **Long-Press** → Palette im Tages-Panel (auch Mobile)
-3. In der geöffneten Notiz: `color`-Property im Frontmatter
+1. **Right-click** on the cell → palette in the popover (desktop)
+2. **Long-press** → palette at the bottom of the day panel (also works on mobile)
+3. Directly in the open note: `color` is a regular property in the frontmatter
 
-### Mehrfachauswahl
+### Multi-select
 
-1. **⊞ Mehrfach** im Header (oder **📅 Zeitraum** öffnen)
-2. Über Zellen ziehen → blaue Ringe
-3. Aktionsleiste unten: Farbe + Titel + Inhalt → **Auf N Wochen anwenden**
-4. Leere Eingabe → markierte Notizen wandern in den **Papierkorb**
+1. **⊞ Multi-select** in the header (or open **📅 Date range**)
+2. Drag across cells → blue rings
+3. Bottom action bar: color + title + content → **Apply to N weeks**
+4. Empty input → selected notes go to the **trash**
 
 ### Zoom
 
-- Slider-Mitte (50) = Fensterbreite, links → alles sichtbar, rechts → bis 24 px Zellgröße
-- Bei jeder Zoom-Änderung wird **auf die aktuelle Woche zentriert**
-- **Strg+Mausrad** über dem Grid (Trackpad-Pinch am Desktop sendet ebenfalls Strg+Rad)
-- **2-Finger-Pinch** in der Mobile-App
+- Slider middle (50) = fit width; left → fit everything; right → up to 24 px cell size
+- Every zoom change **centers on the current week**
+- **Ctrl+wheel** over the grid (trackpad pinch on desktop sends Ctrl+wheel too)
+- **Two-finger pinch** in the mobile app
 
-## Architektur
+## Data structure
+
+Identical to the browser app – both stay usable in parallel.
+
+```
+{base folder}/                 # default: Bibliothek/Diary
+├─ Weekly basis/
+│  ├─ {Tab1}/                  # tab name = folder name
+│  │  ├─ 2026-04-06-W14 Vacation.md
+│  │  └─ attachments/
+│  └─ {Tab2}/…
+└─ Daily basis/                # flat (or Daily basis/{Tab}/ per tab)
+   └─ 2026-04-14.md
+```
+
+**File names:** `yyyy-mm-dd-Www[ Title].md` (weekly entries), `yyyy-mm-dd[ Title].md` (daily entries).
+**Frontmatter** is maintained via `app.fileManager.processFrontMatter()` – foreign keys (e.g. `date`/`time`/`tags` in legacy daily notes) are **never touched**.
+
+### File example
+
+```markdown
+---
+week: "Jahr 1, Woche 14"
+dates: "06.04.2026 – 12.04.2026"
+color: "#c97c3a"
+title: "Vacation"
+---
+
+Markdown content here…
+```
+
+> The German YAML labels (`week`, `dates`) are kept for compatibility with the browser app. The UI is fully translated; only the *file format* stays in this form.
+
+## Architecture
 
 ```
 src/
-├─ main.ts                 # Plugin-Klasse, View/Ribbon/Command/SettingTab
+├─ main.ts                 # Plugin class, View/Ribbon/Command/SettingTab
 ├─ settings.ts             # basePath, birthDate, lifeExpectancy, openMode, legends, tabConfigs
-├─ view.tsx                # ItemView + React-Root (createRoot)
-├─ i18n.ts                 # moment.locale() → DE/EN, Intl-Datumsformate
-├─ core/                   # pure Logik – portiert aus lifeweeks.html
-│  ├─ dates.ts             # rowMonday, weekStartDate, weekKey (UTC-Fix!), …
+├─ view.tsx                # ItemView + React root (createRoot)
+├─ i18n.ts                 # moment.locale() → DE/EN, Intl date formats
+├─ core/                   # pure logic – ported from lifeweeks.html
+│  ├─ dates.ts             # rowMonday, weekStartDate, weekKey (UTC fix!), …
 │  ├─ filenames.ts         # weekFilename, dailyFilename, buildWeekFileContent, …
 │  ├─ milestones.ts        # computeMilestoneWeeks
 │  ├─ types.ts
-│  └─ dates.test.ts        # vitest – 15 Tests
-├─ data/                   # Vault-Adapter (ersetzt FileStore/DirStore der Browser-App)
-│  ├─ WeekIndex.ts         # baut TabWeeks aus MetadataCache
-│  └─ DailyIndex.ts        # tolerantes Lesen, fremdes Frontmatter unberührt
-└─ ui/                     # React-Komponenten
-   ├─ App.tsx              # State + Schreib-Aktionen
-   ├─ WeekGrid.tsx         # 4680 Zellen, memo, ein globaler Tooltip
-   ├─ WeekCell             # inline in WeekGrid
-   ├─ WeekQuickEdit.tsx    # Popover (Portal in document.body)
-   ├─ DayPanel.tsx         # Long-Press: Mo–So + Wochen-Palette
-   ├─ Legend.tsx           # editierbar pro Tab + Drag&Drop
+│  └─ dates.test.ts        # vitest – 15 tests
+├─ data/                   # vault adapter (replaces FileStore/DirStore of the browser app)
+│  ├─ WeekIndex.ts         # builds TabWeeks from MetadataCache
+│  └─ DailyIndex.ts        # tolerant reads, foreign frontmatter untouched
+└─ ui/                     # React components
+   ├─ App.tsx              # state + write actions
+   ├─ WeekGrid.tsx         # 4680 cells, memo, single global tooltip
+   ├─ WeekQuickEdit.tsx    # popover (portal to document.body)
+   ├─ DayPanel.tsx         # long-press: Mon–Sun + weekly palette
+   ├─ Legend.tsx           # editable per tab + drag&drop
    ├─ BulkActionBar.tsx
-   ├─ TabSettingsModal.tsx # eigene Zeitachse, ownDailyBasis, Meilensteine
+   ├─ TabSettingsModal.tsx # own timeline, ownDailyBasis, milestones
    ├─ DateRangeModal.tsx
    ├─ SetupScreen.tsx
-   └─ constants.ts         # Palette, Legenden-Defaults
+   └─ constants.ts         # palette, legend defaults
 ```
 
-**Technologie:** TypeScript + esbuild, React 18 gebündelt (kein CDN). View-Updates über `metadataCache.changed` + `vault.create/delete/rename` (debounced 400 ms).
+**Tech stack:** TypeScript + esbuild, React 18 bundled (no CDN). View updates via `metadataCache.changed` + `vault.create/delete/rename` (debounced 400 ms).
 
-### Wichtige Designentscheidungen
+### Design decisions
 
-- **Kein eingebetteter Markdown-Editor**: Wochennotizen öffnen sich nativ in Obsidian (Split/Tab) – damit funktionieren CodeMirror 6, Bilder-Paste, Templater, Backlinks gratis. CodeMirror 5 (wie in lifeweeks.html) würde mit Obsidians CM6 kollidieren.
-- **`processFrontMatter` statt YAML-Rewrite**: schützt fremdes Frontmatter (Alt-Dailies mit `date`/`time`/`tags` werden nie zerstört).
-- **Globaler Tooltip per Event-Delegation**: nur **ein** Tooltip-DOM-Knoten statt 4680.
-- **Portale in `document.body`**: Obsidian-Leaves setzen `contain: strict`, dadurch würden `position: fixed`-Overlays sonst am (schmalen) Panel kleben.
-- **weekKey-UTC-Bug aus der Browser-App ist im Port gefixt** (`localIso` statt `toISOString`).
+- **No embedded Markdown editor**: weekly notes open natively in Obsidian (split/tab) – this gives CodeMirror 6, image paste, Templater and backlinks for free. CodeMirror 5 (as used in lifeweeks.html) would collide with Obsidian's CM6.
+- **`processFrontMatter` instead of YAML rewrite**: protects foreign frontmatter (legacy dailies with `date`/`time`/`tags` are never destroyed).
+- **Single global tooltip via event delegation**: only **one** tooltip DOM node instead of 4680.
+- **Portals to `document.body`**: Obsidian leaves set `contain: strict`, so `position: fixed` overlays would otherwise stick to the (narrow) panel.
+- **The `weekKey` UTC bug from the browser app is fixed in the port** (`localIso` instead of `toISOString`).
 
-## Entwicklung
+## Development
 
 ```powershell
-cd lifeweeks\obsidian-plugin
+cd lifeweeks/obsidian-plugin
 npm install
-npm run dev      # Watch → test-vault/.obsidian/plugins/lifeweeks/
+npm run dev      # watch → test-vault/.obsidian/plugins/lifeweeks/
 npm test         # vitest
-npm run build    # Production-Build (tsc -noEmit + esbuild)
+npm run build    # production build (tsc -noEmit + esbuild)
 ```
 
-`test-vault/` enthält kopierte Realdaten (alle 3 Tabs, Emoji-Datei, Alt-Dailies, Legacy-`Beruf/`). Der Watch-Mode kopiert **nie** in den echten Vault.
+`test-vault/` holds copied real-world data (all 3 tabs, an emoji file, legacy dailies, the historical `Beruf/` folder). It is gitignored. The watch mode **never** writes to the real vault.
 
-## Deploy in den echten Vault
+### Deploy to your real vault (manual workflow)
 
-Das Plugin wird mit dem Skript [`deploy.ps1`](./deploy.ps1) installiert. Es kopiert nur 3 Dateien (`main.js`, `manifest.json`, `styles.css`) nach `MCB/.obsidian/plugins/lifeweeks/` – nichts weiter.
+The script [`deploy.ps1`](./deploy.ps1) copies `main.js`, `manifest.json` and `styles.css` to `MCB/.obsidian/plugins/lifeweeks/` (path baked into the script – adjust for your vault).
 
 ```powershell
-cd C:\Users\MichaelChristianBaum\Documents\Zusätzliches\Personal\lifeweeks\obsidian-plugin
-npm run build        # bauen
-.\deploy.ps1         # in den MCB-Vault kopieren
+npm run build
+.\deploy.ps1
 ```
 
-Danach in Obsidian: **Einstellungen → Community-Plugins → Aktualisieren** (oder Obsidian neu laden / „Reload plugin without saving"). Beim ersten Start erscheint der Setup-Screen (Geburtsdatum, Lebenserwartung, Basisordner).
+Then in Obsidian: **Settings → Community plugins → Reload**, or use the command palette → "Reload app without saving".
 
-## Kompatibilität zur Browser-App
+## Compatibility with the browser app
 
-Dateiformate, Dateinamen und Frontmatter-Konventionen sind **identisch**. Eine Wochennotiz, die mit lifeweeks.html angelegt wurde, taucht im Plugin sofort auf – und umgekehrt. Beide Apps können parallel auf demselben Datenordner arbeiten.
+File formats, file names and frontmatter conventions are **identical**. A weekly note created with `lifeweeks.html` shows up in the plugin immediately, and vice versa. Both apps can work on the same data folder in parallel.
 
 ## Mobile
 
-Das Plugin ist `isDesktopOnly: false`. Long-Press, Pinch-Zoom und Quick-Edit funktionieren über Pointer-Events. Die File-System-Access-API-Lücke der Browser-App (kein iOS-Support, manuelle Verzeichniswahl) fällt damit weg.
+The plugin is `isDesktopOnly: false`. Long-press, pinch zoom and Quick-Edit work via Pointer events. The File-System-Access-API gap of the browser app (no iOS support, manual folder picking) goes away entirely.
+
+## License
+
+MIT – see [LICENSE](./LICENSE).
