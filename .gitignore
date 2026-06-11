@@ -1,0 +1,16 @@
+node_modules/
+
+# Build-Output – nicht ins Repo, kommt nur in den Release
+main.js
+test-vault/.obsidian/plugins/lifeweeks/main.js
+test-vault/.obsidian/workspace.json
+test-vault/.obsidian/workspace.json.bak
+
+# Editor / OS
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Release-Sammelordner des Workflows
+release/

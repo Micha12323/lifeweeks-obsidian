@@ -1,0 +1,25 @@
+{
+  "name": "lifeweeks-obsidian",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Life in Weeks als Obsidian-Plugin",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit && node esbuild.config.mjs production",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "esbuild": "^0.24.0",
+    "obsidian": "^1.7.2",
+    "tslib": "^2.6.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  }
+}
