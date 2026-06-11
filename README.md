@@ -2,6 +2,8 @@
 
 A "Life in Weeks" grid (default: 90 years × 52 weeks = 4680 cells) rendered over the weekly and daily notes in your vault. Click a cell to open the note, long-press for the day view.
 
+![Life in Weeks grid in Obsidian](docs/grid.png)
+
 > Port of the standalone [browser app](../lifeweeks.html) as a native Obsidian plugin. Both write the same Markdown files and can be used in parallel.
 
 ## Installation
