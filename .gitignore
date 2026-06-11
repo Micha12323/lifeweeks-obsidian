@@ -2,9 +2,9 @@ node_modules/
 
 # Build-Output – nicht ins Repo, kommt nur in den Release
 main.js
-test-vault/.obsidian/plugins/lifeweeks/main.js
-test-vault/.obsidian/workspace.json
-test-vault/.obsidian/workspace.json.bak
+
+# Lokaler Test-Vault (mit privaten Beispieldaten) – nie ins Repo
+test-vault/
 
 # Editor / OS
 .DS_Store
