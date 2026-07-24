@@ -1,7 +1,7 @@
 {
   "id": "lifeweeks",
   "name": "Life in Weeks",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minAppVersion": "1.4.0",
   "description": "Life-in-Weeks-Grid über die Wochen- und Tagesnotizen des Vaults. Klick öffnet die Notiz, Long-Press die Tagesansicht.",
   "author": "Michael Christian Baum",

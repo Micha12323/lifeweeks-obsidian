@@ -49,6 +49,7 @@ Tabs are auto-detected from the subfolders of `Weekly basis/` – no separate co
 | Multi-select + bulk edit | **⊞ Multi-select** button + drag-to-select |
 | Date range selection | **📅 Date range** button (From/To) |
 | Zoom | Slider (middle = fit width, right = zoom in), **Ctrl+wheel**, **pinch** (mobile) |
+| View mode | Button next to the slider cycles fit width → fit height → normal size |
 | New tab | **+** in the tab bar – creates a folder under `Weekly basis/` |
 | Per-tab timeline | ⚙ on the active tab |
 | Per-tab legend | Editable (colors, labels, order, custom entries) |
@@ -76,12 +77,15 @@ Tabs are auto-detected from the subfolders of `Weekly basis/` – no separate co
 3. Bottom action bar: color + title + content → **Apply to N weeks**
 4. Empty input → selected notes go to the **trash**
 
-### Zoom
+### Zoom and view modes
 
-- Slider middle (50) = fit width; left → fit everything; right → up to 24 px cell size
+- Slider middle (50) = fit width; left → fit all rows; right → zoom in (at least 24 px cell size)
+- The **button next to the slider** cycles through three view modes: **↔ fit width** → **↕ fit height** (all rows visible) → **1:1 normal size** (fixed 10 px cells, independent of the window size). The icon always shows the mode the *next* click switches to.
+- Moving the slider, Ctrl+wheel or pinching leaves the 1:1 mode again
 - Every zoom change **centers on the current week**
 - **Ctrl+wheel** over the grid (trackpad pinch on desktop sends Ctrl+wheel too)
 - **Two-finger pinch** in the mobile app
+- The legend scrolls away together with the grid, so it costs no permanent vertical space
 
 ## Data structure
 
@@ -185,7 +189,25 @@ File formats, file names and frontmatter conventions are **identical**. A weekly
 
 ## Mobile
 
-The plugin is `isDesktopOnly: false`. Long-press, pinch zoom and Quick-Edit work via Pointer events. The File-System-Access-API gap of the browser app (no iOS support, manual folder picking) goes away entirely.
+The plugin is `isDesktopOnly: false`, and there is **no separate mobile build** – phone and desktop load the very same `main.js` and `styles.css`. Long-press, pinch zoom and Quick-Edit work via Pointer events. The File-System-Access-API gap of the browser app (no iOS support, manual folder picking) goes away entirely.
+
+### Updating on your phone
+
+**Option A: BRAT (recommended).** BRAT runs on mobile and pulls new builds from GitHub releases:
+
+1. Publish a [release](https://github.com/Micha12323/lifeweeks-obsidian/releases) whose tag matches `version` in `manifest.json`, with `main.js`, `manifest.json` and `styles.css` attached as assets
+2. On the phone: **Settings → BRAT → Check for updates** (or let BRAT auto-update at startup)
+3. **Settings → Community plugins** → toggle **Life in Weeks** off and on again
+
+**Option B: vault sync.** If your sync covers `.obsidian/`, a desktop deploy reaches the phone on its own:
+
+- **Obsidian Sync:** enable **Settings → Sync → Installed community plugins** – without it, plugin folders are skipped
+- **Syncthing / iCloud / Dropbox:** works as long as `.obsidian/` is not excluded
+- Then toggle the plugin off and on again on the phone
+
+**Option C: manual copy.** Put `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/lifeweeks/` on the phone (Android: any file manager; iOS: the Files app).
+
+> A fresh build alone is not enough: the plugin code is only re-read after **toggling the plugin off/on** or restarting the app. And always bump `version` in `manifest.json` – otherwise BRAT sees no update.
 
 ## License
 
