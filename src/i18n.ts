@@ -29,15 +29,16 @@ export function obsidianLocale(): string {
 type Dict = Record<string, string>;
 
 const DE: Dict = {
-  age: "{years} Jahre, {weeks} Wochen",
-  multiSelect: "⊞ Mehrfach",
+  age: "{years} J, {weeks} W",
+  // Buttons bewusst nur als Icon – die Erklärung steckt im title-Tooltip
+  multiSelect: "⊞",
   multiSelectTitle: "Mehrfachauswahl: Wochen markieren und gemeinsam bearbeiten",
   zoomTitle: "Zoom (auch Strg+Mausrad / Pinch) – zentriert auf die aktuelle Woche",
   zoomModeWidth: "Fensterbreite",
   zoomModeHeight: "Fensterhöhe (alles sichtbar)",
   zoomModeNormal: "Normalgröße",
   zoomModeTitle: "Ansicht umschalten → {next}",
-  dateRangeBtn: "📅 Zeitraum",
+  dateRangeBtn: "📅",
   dateRangeTitle: "Zeitraum auswählen",
   dateRangeHint: "Markiert alle Wochen im Zeitraum (Mehrfachauswahl).",
   from: "Von",
@@ -106,7 +107,7 @@ const DE: Dict = {
   birthDateLabel: "Geburtsdatum",
   basePathLabel: "Basisordner im Vault",
   start: "Loslegen",
-  appTitle: "Leben in Wochen",
+  appTitle: "Weeks",
   cmdOpen: "Life in Weeks öffnen",
   cmdJumpToday: "Zur heutigen Woche springen",
   settingBasePath: "Basisordner",
@@ -125,15 +126,16 @@ const DE: Dict = {
 };
 
 const EN: Dict = {
-  age: "{years} years, {weeks} weeks",
-  multiSelect: "⊞ Multi-select",
+  age: "{years}y, {weeks}w",
+  // Icon-only buttons – the explanation lives in the title tooltip
+  multiSelect: "⊞",
   multiSelectTitle: "Multi-select: mark weeks and edit them together",
   zoomTitle: "Zoom (also Ctrl+wheel / pinch) – centered on the current week",
   zoomModeWidth: "Fit width",
   zoomModeHeight: "Fit height (all rows)",
   zoomModeNormal: "Normal size",
   zoomModeTitle: "Switch view → {next}",
-  dateRangeBtn: "📅 Date range",
+  dateRangeBtn: "📅",
   dateRangeTitle: "Select date range",
   dateRangeHint: "Selects all weeks in the range (multi-select).",
   from: "From",
@@ -202,7 +204,7 @@ const EN: Dict = {
   birthDateLabel: "Birth date",
   basePathLabel: "Base folder in vault",
   start: "Get started",
-  appTitle: "Life in Weeks",
+  appTitle: "Weeks",
   settingBasePath: "Base folder",
   settingBasePathDesc: 'Vault folder containing "Weekly basis/" and "Daily basis/"',
   settingBirthDate: "Birth date",
