@@ -35,6 +35,8 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
   const [activeTabName, setActiveTabName] = useState<string | null>(null);
   // 50 = Fensterbreite (Mitte der Zoom-Kennlinie)
   const [zoom, setZoom] = useState(50);
+  // Normalgröße: feste Zellgröße unabhängig vom Fenster (übersteuert den Slider)
+  const [normalZoom, setNormalZoom] = useState(false);
   const [showDateRange, setShowDateRange] = useState(false);
   const [quickEdit, setQuickEdit] = useState<{ n: number; x: number; y: number } | null>(null);
   const [dayPanelN, setDayPanelN] = useState<number | null>(null);
@@ -301,8 +303,24 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
   }, []);
 
   const handleZoomDelta = useCallback((delta: number) => {
+    setNormalZoom(false);
     setZoom((z) => Math.max(0, Math.min(100, z + delta)));
   }, []);
+
+  // ── Ansichts-Modus: Fensterbreite → Fensterhöhe → Normalgröße ────
+  const zoomMode = normalZoom ? "normal" : zoom === 50 ? "width" : zoom === 0 ? "height" : "free";
+  const nextZoomMode = zoomMode === "width" ? "height" : zoomMode === "height" ? "normal" : "width";
+  const cycleZoomMode = useCallback(() => {
+    if (nextZoomMode === "height") {
+      setNormalZoom(false);
+      setZoom(0);
+    } else if (nextZoomMode === "normal") {
+      setNormalZoom(true);
+    } else {
+      setNormalZoom(false);
+      setZoom(50);
+    }
+  }, [nextZoomMode]);
 
   // ── Datumsbereich → Mehrfachauswahl (Port aus der Browser-App) ───
   const applyDateRange = useCallback(
@@ -419,9 +437,27 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
           min={0}
           max={100}
           value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
+          onChange={(e) => {
+            setNormalZoom(false);
+            setZoom(Number(e.target.value));
+          }}
           title={t("zoomTitle")}
         />
+        <button
+          className="lw-ms-toggle lw-zoom-mode"
+          onClick={cycleZoomMode}
+          title={t("zoomModeTitle", {
+            next: t(
+              nextZoomMode === "height"
+                ? "zoomModeHeight"
+                : nextZoomMode === "normal"
+                  ? "zoomModeNormal"
+                  : "zoomModeWidth"
+            ),
+          })}
+        >
+          {nextZoomMode === "height" ? "↕" : nextZoomMode === "normal" ? "1:1" : "↔"}
+        </button>
       </div>
 
       <div className="lw-tabbar">
@@ -488,6 +524,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
         weeksData={weeksData}
         dailyIdx={dailyIdx}
         zoomLevel={zoom}
+        normalZoom={normalZoom}
         showMilestones={showMilestones}
         legend={legend}
         onLegendChange={handleLegendChange}

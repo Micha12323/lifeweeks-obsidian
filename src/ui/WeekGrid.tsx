@@ -21,6 +21,7 @@ interface GridProps {
   weeksData: TabWeeks;
   dailyIdx: DailyIdx;
   zoomLevel: number;
+  normalZoom: boolean;
   showMilestones: boolean;
   legend: LegendState;
   onLegendChange: (changes: Partial<LegendState>) => void;
@@ -36,6 +37,9 @@ interface GridProps {
 
 /** Maximale Zellgröße beim Hineinzoomen (px) */
 const MAX_CELL = 24;
+
+/** Feste Zellgröße im Modus "Normalgröße" (px), unabhängig von der Fenstergröße */
+const NORMAL_CELL = 10;
 
 interface CellInfo {
   n: number;
@@ -124,6 +128,7 @@ export function WeekGrid({
   weeksData,
   dailyIdx,
   zoomLevel,
+  normalZoom,
   showMilestones,
   legend,
   onLegendChange,
@@ -175,8 +180,14 @@ export function WeekGrid({
   useEffect(() => {
     const update = () => {
       if (!wrapRef.current) return;
+      if (normalZoom) {
+        setCellSize(NORMAL_CELL);
+        return;
+      }
       // Kennlinie: 0 = alles sichtbar (fitAll) · 50 = Fensterbreite (fitWidth) · 100 = MAX_CELL
-      const fitWidth = Math.max(3, Math.min(12, Math.floor((wrapRef.current.clientWidth - FIXED_WIDTH) / 52)));
+      // fitWidth ungedeckelt, damit die 52 Spalten das Fenster wirklich füllen;
+      // bei sehr breiten Fenstern kann fitWidth über MAX_CELL liegen
+      const fitWidth = Math.max(3, Math.floor((wrapRef.current.clientWidth - FIXED_WIDTH) / 52));
       const avail = (gridWrapRef.current?.clientHeight ?? window.innerHeight) - 70;
       const vGaps = Math.floor(years / 10) * 5;
       const fitAll = Math.max(2, Math.floor((avail - vGaps) / years) - 2);
@@ -184,13 +195,13 @@ export function WeekGrid({
       const size =
         t <= 0.5
           ? fitAll + (fitWidth - fitAll) * (t / 0.5)
-          : fitWidth + (MAX_CELL - fitWidth) * ((t - 0.5) / 0.5);
+          : fitWidth + (Math.max(MAX_CELL, fitWidth) - fitWidth) * ((t - 0.5) / 0.5);
       setCellSize(Math.max(2, Math.round(size)));
     };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [zoomLevel, years]);
+  }, [zoomLevel, normalZoom, years]);
 
   // Beim Zoomen immer auf die aktuelle Woche zentrieren
   useEffect(() => {
@@ -315,8 +326,6 @@ export function WeekGrid({
 
   return (
     <div ref={gridWrapRef} className={`lw-grid-wrap ${multiSelectMode ? "select-mode" : ""}`}>
-      <Legend legend={legend} onChange={onLegendChange} />
-
       <div
         ref={wrapRef}
         className="lw-grid-center"
@@ -405,7 +414,11 @@ export function WeekGrid({
           cancelLong();
         }}
       >
-        <GridBody rows={rows} years={years} birthYear={birthYear} cellSize={cellSize} />
+        {/* Legende scrollt mit dem Grid nach oben aus dem Bild */}
+        <div className="lw-grid-inner">
+          <Legend legend={legend} onChange={onLegendChange} />
+          <GridBody rows={rows} years={years} birthYear={birthYear} cellSize={cellSize} />
+        </div>
       </div>
 
       <div className="lw-counter-bar">

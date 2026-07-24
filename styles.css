@@ -41,6 +41,10 @@
   margin-left: auto;
   width: 140px;
 }
+.lw-zoom-mode {
+  min-width: 34px;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── TABBAR ─────────────────────────────────────── */
 .lw-tabbar {
@@ -195,9 +199,15 @@
 }
 .lw-grid-center {
   display: flex;
-  justify-content: center;
   overflow: auto;
   flex: 1;
+}
+/* Legende + Grid als gemeinsame Scroll-Spalte; margin:auto zentriert
+   horizontal, ohne dass Inhalt bei Überbreite links abgeschnitten wird */
+.lw-grid-inner {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
 }
 .lw-grid-body {
   display: flex;

@@ -5,7 +5,11 @@
 $ErrorActionPreference = "Stop"
 
 $src = Join-Path $PSScriptRoot "test-vault\.obsidian\plugins\lifeweeks"
-$dst = "C:\Users\MichaelChristianBaum\Documents\Zusätzliches\Personal\MCB\.obsidian\plugins\lifeweeks"
+# Pfad relativ zum Skript ableiten (Personal/lifeweeks/obsidian-plugin -> Personal/MCB).
+# Kein Umlaut-Literal: Windows PowerShell 5.1 liest UTF-8 ohne BOM als ANSI und
+# wuerde sonst in einen falschen "ZusÃ¤tzliches"-Ordner deployen.
+$personal = Split-Path (Split-Path $PSScriptRoot)
+$dst = Join-Path $personal "MCB\.obsidian\plugins\lifeweeks"
 
 if (-not (Test-Path (Join-Path $src "main.js"))) {
     Write-Error "Kein Build gefunden ($src\main.js fehlt). Erst 'npm run build' ausführen."
