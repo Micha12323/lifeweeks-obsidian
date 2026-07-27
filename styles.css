@@ -214,6 +214,9 @@
   overflow: auto;
   flex: 1;
   min-height: 0;
+  /* Scrollbar-Platz reservieren, damit die nutzbare Breite beim Ein-/Ausblenden
+     der vertikalen Scrollbar stabil bleibt (kein Zoom-Flackern). */
+  scrollbar-gutter: stable;
 }
 /* Legende + Grid als gemeinsame Scroll-Spalte; margin:auto zentriert
    horizontal, ohne dass Inhalt bei Überbreite links abgeschnitten wird */

@@ -1,7 +1,7 @@
 {
   "id": "lifeweeks",
   "name": "Life in Weeks",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "minAppVersion": "1.8.0",
   "description": "Render a life-in-weeks grid over your vault's weekly and daily notes. Click a cell to open its note, long-press for the day view.",
   "author": "Michael Christian Baum",
