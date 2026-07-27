@@ -262,7 +262,7 @@ export function WeekGrid({
     }
   };
   const cellFromEvent = (e: { target: EventTarget | null }): number | null => {
-    const el = (e.target as HTMLElement).closest(".lw-cell") as HTMLElement | null;
+    const el = (e.target as HTMLElement | null)?.closest<HTMLElement>(".lw-cell") ?? null;
     return el ? Number(el.dataset.n) : null;
   };
 

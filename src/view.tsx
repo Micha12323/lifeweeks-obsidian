@@ -31,7 +31,7 @@ export class LifeWeeksView extends ItemView {
     const container = this.containerEl.children[1];
     container.empty();
     container.addClass("lifeweeks-root");
-    this.root = createRoot(container as HTMLElement);
+    this.root = createRoot(container);
     this.root.render(
       <StrictMode>
         <LifeWeeksApp plugin={this.plugin} />

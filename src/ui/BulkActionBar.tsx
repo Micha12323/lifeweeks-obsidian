@@ -71,7 +71,7 @@ export function BulkActionBar({
         rows={2}
       />
       <div className="lw-bulk-actions">
-        <button className="lw-qe-open" disabled={busy || count === 0} onClick={apply}>
+        <button className="lw-qe-open" disabled={busy || count === 0} onClick={() => void apply()}>
           {busy ? t("bulkSaving") : count === 1 ? t("bulkApplyOne") : t("bulkApply", { n: count })}
         </button>
         <button className="lw-qe-close" title={t("bulkClear")} onClick={onClear}>

@@ -49,7 +49,7 @@ export function SetupScreen({ plugin, onDone }: { plugin: LifeWeeksPlugin; onDon
         {t("basePathLabel")}
         <input value={basePath} onChange={(e) => setBasePath(e.target.value)} placeholder="Bibliothek/Diary" />
       </label>
-      <button className="lw-qe-open" disabled={!valid} onClick={save}>
+      <button className="lw-qe-open" disabled={!valid} onClick={() => void save()}>
         {t("start")}
       </button>
     </div>

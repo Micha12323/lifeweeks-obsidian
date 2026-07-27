@@ -81,7 +81,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
 
   const tabs = useMemo(
     () => listTabs(app, settings.basePath),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Neuberechnung wird bewusst über die Versions-Zähler (indexV/settingsV) ausgelöst, nicht über alle Einzel-Dependencies
     [app, settings.basePath, indexV, settingsV]
   );
   const tab = tabs.find((t) => t.name === activeTabName) ?? tabs[0] ?? null;
@@ -94,7 +94,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
 
   const weeksData = useMemo(
     () => (tab ? buildWeekIndex(app, settings.basePath, tab.name, bd, lifeExpectancy) : {}),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Neuberechnung wird bewusst über die Versions-Zähler (indexV/settingsV) ausgelöst, nicht über alle Einzel-Dependencies
     [app, settings.basePath, bd, lifeExpectancy, tab?.name, indexV, settingsV]
   );
 
@@ -102,14 +102,14 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
   const dailyPath = dailyBasisPath(settings.basePath, tabConfig.ownDailyBasis ? tab?.name : null);
   const dailyIdx = useMemo(
     () => buildDailyIndex(app, dailyPath),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Neuberechnung wird bewusst über die Versions-Zähler (indexV/settingsV) ausgelöst, nicht über alle Einzel-Dependencies
     [app, dailyPath, indexV, settingsV]
   );
 
   // ── Legende (pro Tab, in Plugin-Settings persistiert) ─────────────
   const legend: LegendState = useMemo(
     () => normalizeLegend(tab ? settings.legends[tab.name] : undefined),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Neuberechnung wird bewusst über die Versions-Zähler (indexV/settingsV) ausgelöst, nicht über alle Einzel-Dependencies
     [tab?.name, settingsV]
   );
 
@@ -153,7 +153,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
         if (existing) {
           const file = getFile(app, existing.path);
           if (!file) return;
-          await app.fileManager.processFrontMatter(file, (fm) => {
+          await app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
             if (color) fm.color = color;
             else delete fm.color;
           });
@@ -174,7 +174,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
         if (existing) {
           const file = getFile(app, existing.path);
           if (!file) return;
-          await app.fileManager.processFrontMatter(file, (fm) => {
+          await app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
             if (title) fm.title = title;
             else delete fm.title;
           });
@@ -558,9 +558,9 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
           y={quickEdit.y}
           birthDate={bd}
           data={weeksData[weekKey(bd, quickEdit.n)] ?? null}
-          onColor={handleColor}
-          onTitle={handleTitle}
-          onOpen={handleOpen}
+          onColor={(n, color) => void handleColor(n, color)}
+          onTitle={(n, title) => void handleTitle(n, title)}
+          onOpen={(n) => void handleOpen(n)}
           onClose={() => setQuickEdit(null)}
         />
       )}
@@ -571,10 +571,10 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
           birthDate={bd}
           weeksData={weeksData}
           dailyIdx={dailyIdx}
-          onOpenDay={handleOpenDay}
-          onOpenWeek={handleOpen}
-          onWeekColor={handleColor}
-          onWeekTitle={handleTitle}
+          onOpenDay={(iso) => void handleOpenDay(iso)}
+          onOpenWeek={(n) => void handleOpen(n)}
+          onWeekColor={(n, color) => void handleColor(n, color)}
+          onWeekTitle={(n, title) => void handleTitle(n, title)}
           onClose={() => setDayPanelN(null)}
         />
       )}

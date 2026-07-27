@@ -15,8 +15,8 @@ export default class LifeWeeksPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "open-lifeweeks",
-      name: "Life in Weeks öffnen",
+      id: "open",
+      name: "Öffnen",
       callback: () => void this.activateView(),
     });
 
@@ -34,7 +34,8 @@ export default class LifeWeeksPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const data = (await this.loadData()) as Partial<LifeWeeksSettings> | null;
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
   }
 
   async saveSettings() {

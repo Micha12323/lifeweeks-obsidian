@@ -1,25 +1,25 @@
 /*
  * i18n: UI-Texte (de/en, Fallback en) + locale-abhängige Datumsformate via Intl.
- * Die Obsidian-Sprache liegt in localStorage["language"] (null = Englisch).
+ * Die UI-Sprache kommt aus Obsidians getLanguage() (Fallback: moment-Locale).
  * Wichtig: Das DATEIFORMAT (Frontmatter week:/dates:, Dateinamen) bleibt
  * unabhängig von der UI-Sprache – Kompatibilität zur Browser-App.
  */
 
-import { moment } from "obsidian";
+import { getLanguage, moment } from "obsidian";
 import { weekStartDate } from "./core/dates";
 
 export function obsidianLocale(): string {
-  // 1) Obsidian setzt die moment-Locale auf die eingestellte Oberflächensprache
+  // 1) Obsidian-Oberflächensprache (z.B. "de", "en")
   try {
-    const m = moment.locale();
-    if (m) return m;
+    const lang = getLanguage();
+    if (lang) return lang;
   } catch {
     /* z.B. in Tests ohne Obsidian */
   }
-  // 2) Fallback: localStorage-Key (nur gesetzt, wenn Sprache je geändert wurde)
+  // 2) Fallback: moment-Locale
   try {
-    const ls = window.localStorage.getItem("language");
-    if (ls) return ls;
+    const m = moment.locale();
+    if (m) return m;
   } catch {
     /* ignore */
   }
