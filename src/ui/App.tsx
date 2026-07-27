@@ -125,7 +125,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
 
   // ── Schreib-Aktionen ──────────────────────────────────────────────
   const ensureFolder = useCallback(async (): Promise<string> => {
-    if (!tab) throw new Error("Kein Tab aktiv");
+    if (!tab) throw new Error("No active tab");
     const folderPath = tabFolderPath(settings.basePath, tab.name);
     if (!getFolder(app, folderPath)) await app.vault.createFolder(folderPath);
     return folderPath;

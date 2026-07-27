@@ -1,6 +1,6 @@
 {
   "name": "lifeweeks-obsidian",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "description": "Life in Weeks als Obsidian-Plugin",
   "scripts": {

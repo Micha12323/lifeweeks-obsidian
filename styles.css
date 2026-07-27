@@ -100,6 +100,10 @@
 /* ── GRID ───────────────────────────────────────── */
 .lw-grid-wrap {
   flex: 1;
+  /* min-height:0 nötig, damit der flex:1-Container nicht auf Content-Höhe
+     wächst; sonst greift overflow:auto nicht und clientHeight liefert die
+     volle Inhaltshöhe (bricht Fit-Höhe/Rauszoomen, v.a. auf Mobile). */
+  min-height: 0;
   overflow: auto;
   padding: 4px 10px 8px;
   display: flex;
@@ -209,6 +213,7 @@
   display: flex;
   overflow: auto;
   flex: 1;
+  min-height: 0;
 }
 /* Legende + Grid als gemeinsame Scroll-Spalte; margin:auto zentriert
    horizontal, ohne dass Inhalt bei Überbreite links abgeschnitten wird */

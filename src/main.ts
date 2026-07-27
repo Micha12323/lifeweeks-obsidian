@@ -1,6 +1,7 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 import { LifeWeeksView, VIEW_TYPE_LIFEWEEKS } from "./view";
 import { DEFAULT_SETTINGS, LifeWeeksSettings, LifeWeeksSettingTab } from "./settings";
+import { t } from "./i18n";
 
 export default class LifeWeeksPlugin extends Plugin {
   settings: LifeWeeksSettings = DEFAULT_SETTINGS;
@@ -10,13 +11,13 @@ export default class LifeWeeksPlugin extends Plugin {
 
     this.registerView(VIEW_TYPE_LIFEWEEKS, (leaf: WorkspaceLeaf) => new LifeWeeksView(leaf, this));
 
-    this.addRibbonIcon("calendar-days", "Life in Weeks öffnen", () => {
+    this.addRibbonIcon("calendar-days", t("ribbonOpen"), () => {
       void this.activateView();
     });
 
     this.addCommand({
       id: "open",
-      name: "Öffnen",
+      name: t("cmdOpen"),
       callback: () => void this.activateView(),
     });
 

@@ -200,7 +200,15 @@ export function WeekGrid({
     };
     update();
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    // Auf Container-Größe reagieren (Mobile: Layout setzt sich nach Mount,
+    // Panel-/Split-Wechsel lösen kein window-resize aus)
+    const ro = new ResizeObserver(update);
+    if (gridWrapRef.current) ro.observe(gridWrapRef.current);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    return () => {
+      window.removeEventListener("resize", update);
+      ro.disconnect();
+    };
   }, [zoomLevel, normalZoom, years]);
 
   // Beim Zoomen immer auf die aktuelle Woche zentrieren

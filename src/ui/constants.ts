@@ -33,8 +33,13 @@ export const PALETTE = [
   "#455a64",
 ];
 
-/** Feste Breite neben den 52 Zellen: 51 Gaps à 2px + 12 h-gaps à 5px + Achsen 40/50px */
-export const FIXED_WIDTH = 51 * 2 + 12 * 5 + 40 + 50;
+/**
+ * Feste Breite neben den 52 Zellen in einer Grid-Zeile.
+ * Die Zeile ist ein Flexbox mit `gap: 2px` zwischen ALLEN Kindern:
+ * axis-l + 52 Zellen + 12 h-gaps + axis-r = 66 Kinder → 65 Flex-Gaps.
+ * 65 Gaps à 2px + 12 h-gaps à 5px + Achsen 40/50px.
+ */
+export const FIXED_WIDTH = 65 * 2 + 12 * 5 + 40 + 50;
 
 export const FIXED_LEGEND_KEYS = ["past", "current", "future", "entry"] as const;
 
