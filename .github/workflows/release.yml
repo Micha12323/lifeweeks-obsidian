@@ -42,5 +42,4 @@ jobs:
         run: |
           gh release create "$tag" \
             --title="$tag" \
-            --draft \
             release/main.js release/manifest.json release/styles.css
