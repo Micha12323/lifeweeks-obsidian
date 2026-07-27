@@ -179,32 +179,18 @@ export function WeekGrid({
 
   useEffect(() => {
     const update = () => {
-      const wrap = gridWrapRef.current;
-      const center = wrapRef.current;
-      if (!wrap || !center) return;
+      if (!wrapRef.current) return;
       if (normalZoom) {
         setCellSize(NORMAL_CELL);
         return;
       }
-
-      // ── Fit-Breite: 52 Spalten füllen die sichtbare Breite ──────────
-      // ungedeckelt, damit die Spalten das Fenster wirklich füllen;
+      // Kennlinie: 0 = alles sichtbar (fitAll) · 50 = Fensterbreite (fitWidth) · 100 = MAX_CELL
+      // fitWidth ungedeckelt, damit die 52 Spalten das Fenster wirklich füllen;
       // bei sehr breiten Fenstern kann fitWidth über MAX_CELL liegen
-      const fitWidth = Math.max(3, Math.floor((center.clientWidth - FIXED_WIDTH) / 52));
-
-      // ── Fit-Höhe: alle Jahres-Zeilen sollen sichtbar sein ───────────
-      // Sichtbare Höhe des Grid-Bereichs; per innerHeight gedeckelt, falls die
-      // Flex-Höhenkette (v.a. Mobile) den Container mal nicht begrenzt.
-      const visible = Math.min(wrap.clientHeight || Infinity, window.innerHeight);
-      const h = (sel: string) =>
-        wrap.querySelector(sel)?.getBoundingClientRect().height ?? 0;
-      const overhead = h(".lw-legend") + h(".lw-grid-hrow") + h(".lw-counter-bar");
-      const vGaps = Math.floor(years / 10) * 5; // 5px Abstand alle 10 Jahre
-      const rowMargin = 2; // margin-bottom pro Zeile (--lw-gap)
-      const avail = visible - overhead - vGaps - 24; // 24px Sicherheitspuffer
-      const fitAll = Math.max(2, Math.floor(avail / years) - rowMargin);
-
-      // Kennlinie: 0 = fitAll · 50 = fitWidth · 100 = MAX_CELL
+      const fitWidth = Math.max(3, Math.floor((wrapRef.current.clientWidth - FIXED_WIDTH) / 52));
+      const avail = (gridWrapRef.current?.clientHeight ?? window.innerHeight) - 70;
+      const vGaps = Math.floor(years / 10) * 5;
+      const fitAll = Math.max(2, Math.floor((avail - vGaps) / years) - 2);
       const t = (zoomLevel ?? 50) / 100;
       const size =
         t <= 0.5
@@ -214,15 +200,7 @@ export function WeekGrid({
     };
     update();
     window.addEventListener("resize", update);
-    // Nur den äußeren, flex-dimensionierten Container beobachten: seine Größe
-    // hängt vom Panel ab, nicht vom Zell-Inhalt → kein Scrollbar-Feedback-Loop.
-    // (Fängt mobiles Layout-Timing und Panel-/Split-Wechsel ohne window-resize.)
-    const ro = new ResizeObserver(update);
-    if (gridWrapRef.current) ro.observe(gridWrapRef.current);
-    return () => {
-      window.removeEventListener("resize", update);
-      ro.disconnect();
-    };
+    return () => window.removeEventListener("resize", update);
   }, [zoomLevel, normalZoom, years]);
 
   // Beim Zoomen immer auf die aktuelle Woche zentrieren
