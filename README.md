@@ -2,15 +2,15 @@
 
 A "Life in Weeks" grid (for example: 90 years × 52 weeks = 4680 cells) rendered over the weekly and daily notes in your or for creation of new notes (for children, pets, relationships, jobs...) in your vault. 
 
-Click a cell to open the note, long-press for the day view.
+- Click a cell to open the note, long-press for the day view.
 
-Set weekly colours. 
+- Set weekly colours. 
 
-Multi-select to manipulate multiple weeks. 
+- Multi-select to manipulate multiple weeks. 
 
-Add new tabs for new grids.
+- Add new tabs for new grids.
 
-Add a legend for colors.
+- Add a legend for colors.
 
 
 ![Life in Weeks grid in Obsidian](docs/grid.png)
