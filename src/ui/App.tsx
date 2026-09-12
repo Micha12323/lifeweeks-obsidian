@@ -1,6 +1,6 @@
-import { Notice, TFile, WorkspaceLeaf, debounce } from "obsidian";
+import { FileView, Notice, TFile, WorkspaceLeaf, debounce } from "obsidian";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { actualAge, weekKey, weekLabel, weekStartDate } from "../core/dates";
+import { actualAge, localIso, parseLocalDate, weekKey, weekLabel, weekStartDate } from "../core/dates";
 import {
   buildDailyContent,
   buildWeekFileContent,
@@ -19,6 +19,7 @@ import {
 } from "../data/WeekIndex";
 import { t } from "../i18n";
 import type LifeWeeksPlugin from "../main";
+import { VIEW_TYPE_LIFEWEEKS } from "../view";
 import { BulkActionBar } from "./BulkActionBar";
 import { normalizeLegend } from "./constants";
 import { DateRangeModal } from "./DateRangeModal";
@@ -41,10 +42,11 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
   const [quickEdit, setQuickEdit] = useState<{ n: number; x: number; y: number } | null>(null);
   const [dayPanelN, setDayPanelN] = useState<number | null>(null);
   const [showTabSettings, setShowTabSettings] = useState(false);
+  const [jumpSignal, setJumpSignal] = useState(0);
   const [addingTab, setAddingTab] = useState(false);
   const [newTabName, setNewTabName] = useState("");
-  const noteLeafRef = useRef<WorkspaceLeaf | null>(null);
-  const noteLeafMode = useRef<"split" | "tab" | null>(null);
+  /** Zuletzt angelegtes Split-Leaf – neue Notizen kommen als Tab in dieselbe Split-Gruppe */
+  const splitLeafRef = useRef<WorkspaceLeaf | null>(null);
 
   // ── Multi-Select ──────────────────────────────────────────────────
   const [multiSelectMode, setMultiSelectMode] = useState(false);
@@ -63,6 +65,16 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
   }, []);
 
   const settings = plugin.settings;
+
+  // Legenden/Tab-Konfiguration per Sync von einem anderen Gerät geändert → neu rendern
+  useEffect(
+    () =>
+      plugin.onSettingsChanged((ev) => {
+        if (ev.type === "tabRenamed") setActiveTabName((cur) => (cur === ev.from ? ev.to : cur));
+        setSettingsV((v) => v + 1);
+      }),
+    [plugin]
+  );
 
   // Vault-/Cache-Events → Index neu aufbauen (debounced)
   useEffect(() => {
@@ -117,7 +129,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
     (changes: Partial<LegendState>) => {
       if (!tab) return;
       settings.legends[tab.name] = { ...normalizeLegend(settings.legends[tab.name]), ...changes };
-      void plugin.saveSettings();
+      void plugin.saveSyncedSettings();
       setSettingsV((v) => v + 1);
     },
     [plugin, settings, tab]
@@ -192,46 +204,71 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
     [app, bd, weeksData, ensureWeekFile]
   );
 
-  const openInSplit = useCallback(
-    async (file: TFile) => {
+  /**
+   * Notiz in einem eigenen Obsidian-Tab öffnen.
+   * background=true (Rechts-/Mittelklick): Tab wird angelegt, aber der Fokus
+   * bleibt auf dem Grid – so lassen sich mehrere Tage/Wochen nacheinander
+   * "vorladen" und später durchgehen.
+   */
+  const openNote = useCallback(
+    async (file: TFile, background = false) => {
+      const { workspace } = app;
+      // Notiz ist bereits irgendwo offen → dorthin springen statt Duplikat
+      const open: WorkspaceLeaf[] = [];
+      workspace.iterateAllLeaves((l) => {
+        if (l.view instanceof FileView && l.view.file?.path === file.path) open.push(l);
+      });
+      if (open[0]) {
+        if (background) return; // liegt schon in einem Tab bereit
+        workspace.setActiveLeaf(open[0], { focus: true });
+        await workspace.revealLeaf(open[0]);
+        return;
+      }
       // Öffnen-Modus: live aus den Plugin-Settings lesen (SettingTab mutiert
       // dasselbe Objekt); bei "auto" entscheidet die Workspace-Breite
-      const width = app.workspace.containerEl?.clientWidth || window.innerWidth;
+      const width = workspace.containerEl?.clientWidth || window.innerWidth;
       const cfg = plugin.settings.openMode;
       const mode: "split" | "tab" = cfg === "auto" ? (width >= 1000 ? "split" : "tab") : cfg;
-      let leaf = noteLeafRef.current;
-      // Bei Moduswechsel das alte Leaf schließen, sonst bleibt z.B. die alte
-      // Split-Gruppe stehen und es wirkt, als würde weiter dort geöffnet
-      if (leaf && leaf.parent && noteLeafMode.current !== mode) {
-        leaf.detach();
-        leaf = null;
+      let leaf: WorkspaceLeaf;
+      const split = splitLeafRef.current;
+      if (mode === "split" && split && split.parent) {
+        // Split-Gruppe existiert noch → neuer Tab darin (nicht noch ein Split)
+        workspace.setActiveLeaf(split, { focus: false });
+        leaf = workspace.getLeaf("tab");
+      } else {
+        // Jede Notiz bekommt ein eigenes Leaf; bestehende bleiben unverändert
+        leaf = workspace.getLeaf(mode);
+        if (mode === "split") splitLeafRef.current = leaf;
       }
-      if (!leaf || !leaf.parent) {
-        leaf = app.workspace.getLeaf(mode);
-        noteLeafRef.current = leaf;
-        noteLeafMode.current = mode;
+      if (!background) {
+        await leaf.openFile(file, { active: true });
+        return;
       }
-      await leaf.openFile(file);
+      await leaf.openFile(file, { active: false });
+      // Manche Obsidian-Versionen aktivieren neue Tabs trotzdem → Grid zurückholen
+      const gridLeaf = workspace.getLeavesOfType(VIEW_TYPE_LIFEWEEKS)[0];
+      if (gridLeaf) workspace.setActiveLeaf(gridLeaf, { focus: true });
     },
     [app, plugin]
   );
 
   const handleOpen = useCallback(
-    async (n: number) => {
+    async (n: number, background = false) => {
       try {
         const file = await ensureWeekFile(n, {});
-        await openInSplit(file);
+        await openNote(file, background);
+        if (background) return; // Popover/Panel offen lassen – weitere Tabs möglich
         setQuickEdit(null);
         setDayPanelN(null);
       } catch (e) {
         new Notice(t("errOpen", { err: String(e) }));
       }
     },
-    [ensureWeekFile, openInSplit]
+    [ensureWeekFile, openNote]
   );
 
   const handleOpenDay = useCallback(
-    async (iso: string) => {
+    async (iso: string, background = false) => {
       try {
         const existing = dailyIdx[iso];
         let file = existing ? getFile(app, existing.path) : null;
@@ -242,14 +279,25 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
             buildDailyContent(iso, null, "", "")
           );
         }
-        await openInSplit(file);
-        setDayPanelN(null);
+        await openNote(file, background);
+        if (!background) setDayPanelN(null);
       } catch (e) {
         new Notice(t("errOpenDay", { err: String(e) }));
       }
     },
-    [app, dailyIdx, dailyPath, openInSplit]
+    [app, dailyIdx, dailyPath, openNote]
   );
+
+  // ── Befehle (Befehlspalette) → Aktionen dieser Ansicht ───────────
+  useEffect(() => {
+    plugin.viewActions = {
+      openToday: () => void handleOpenDay(localIso(new Date())),
+      jumpToCurrentWeek: () => setJumpSignal((v) => v + 1),
+    };
+    return () => {
+      plugin.viewActions = null;
+    };
+  }, [plugin, handleOpenDay]);
 
   // ── Multi-Select: Drag-Logik (Port aus der Browser-App) ──────────
   const handleCellDown = useCallback(
@@ -325,9 +373,10 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
   // ── Datumsbereich → Mehrfachauswahl (Port aus der Browser-App) ───
   const applyDateRange = useCallback(
     (fromStr: string, toStr: string) => {
-      const from = new Date(fromStr).getTime();
-      const to = new Date(toStr).getTime();
-      if (!fromStr || !toStr || from > to) return;
+      // Lokal parsen – <input type="date"> liefert "YYYY-MM-DD", die Wochen sind lokal
+      const from = parseLocalDate(fromStr).getTime();
+      const to = parseLocalDate(toStr).getTime();
+      if (isNaN(from) || isNaN(to) || from > to) return;
       const total = lifeExpectancy * 52;
       const toAdd = new Set<number>();
       for (let n = 0; n < total; n++) {
@@ -400,7 +449,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
     (changes: TabConfig) => {
       if (!tab) return;
       settings.tabConfigs[tab.name] = { ...settings.tabConfigs[tab.name], ...changes };
-      void plugin.saveSettings();
+      void plugin.saveSyncedSettings();
       setSettingsV((v) => v + 1);
     },
     [plugin, settings, tab]
@@ -430,6 +479,18 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
         </button>
         <button className="lw-ms-toggle" onClick={() => setShowDateRange(true)} title={t("dateRangeTitle")}>
           {t("dateRangeBtn")}
+        </button>
+        <button
+          className="lw-ms-toggle"
+          onClick={() => void handleOpenDay(localIso(new Date()))}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            void handleOpenDay(localIso(new Date()), true);
+          }}
+          onAuxClick={(e) => e.button === 1 && void handleOpenDay(localIso(new Date()), true)}
+          title={`${t("todayTitle")} – ${t("bgHint")}`}
+        >
+          {t("todayBtn")}
         </button>
         <input
           type="range"
@@ -538,14 +599,20 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
           else setQuickEdit({ n, x, y });
         }}
         onCellContext={(n, x, y) => setQuickEdit({ n, x, y })}
+        onCellAux={(n) => {
+          // Mittelklick: vorhandene Wochennotiz im Hintergrund-Tab öffnen
+          if (weeksData[weekKey(bd, n)]) void handleOpen(n, true);
+        }}
         onCellDown={handleCellDown}
         onCellEnter={handleCellEnter}
         onLongPress={(n) => setDayPanelN(n)}
+        jumpSignal={jumpSignal}
       />
 
       {multiSelectMode && selectedWeeks.size > 0 && (
         <BulkActionBar
           count={selectedWeeks.size}
+          legend={legend}
           onApply={applyBulk}
           onClear={() => setSelectedWeeks(new Set())}
         />
@@ -558,9 +625,10 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
           y={quickEdit.y}
           birthDate={bd}
           data={weeksData[weekKey(bd, quickEdit.n)] ?? null}
+          legend={legend}
           onColor={(n, color) => void handleColor(n, color)}
           onTitle={(n, title) => void handleTitle(n, title)}
-          onOpen={(n) => void handleOpen(n)}
+          onOpen={(n, bg) => void handleOpen(n, bg)}
           onClose={() => setQuickEdit(null)}
         />
       )}
@@ -571,8 +639,9 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
           birthDate={bd}
           weeksData={weeksData}
           dailyIdx={dailyIdx}
-          onOpenDay={(iso) => void handleOpenDay(iso)}
-          onOpenWeek={(n) => void handleOpen(n)}
+          legend={legend}
+          onOpenDay={(iso, bg) => void handleOpenDay(iso, bg)}
+          onOpenWeek={(n, bg) => void handleOpen(n, bg)}
           onWeekColor={(n, color) => void handleColor(n, color)}
           onWeekTitle={(n, title) => void handleTitle(n, title)}
           onClose={() => setDayPanelN(null)}

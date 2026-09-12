@@ -4,14 +4,16 @@ import {
   birthdayWeekNum,
   complementaryHex,
   currentWeekNum,
+  dateToGridWeek,
   localIso,
+  parseLocalDate,
   weekKey,
   weekStartDate,
 } from "../core/dates";
-import { computeMilestoneWeeks } from "../core/milestones";
+import { computeMilestoneWeeks, Milestone } from "../core/milestones";
 import type { LegendState, TabWeeks } from "../core/types";
 import type { DailyIdx } from "../data/DailyIndex";
-import { displayWeekLabel, t } from "../i18n";
+import { displayWeekLabel, formatMilestone, t } from "../i18n";
 import { FIXED_WIDTH } from "./constants";
 import { Legend } from "./Legend";
 
@@ -30,9 +32,13 @@ interface GridProps {
   onZoomDelta: (delta: number) => void;
   onCellClick: (n: number, x: number, y: number) => void;
   onCellContext: (n: number, x: number, y: number) => void;
+  /** Mittelklick auf eine Zelle (Hintergrund-Tab) */
+  onCellAux: (n: number) => void;
   onCellDown: (n: number) => void;
   onCellEnter: (n: number) => void;
   onLongPress: (n: number) => void;
+  /** Zähler: jede Erhöhung scrollt zur aktuellen Woche (Befehl „Zur aktuellen Woche springen“) */
+  jumpSignal?: number;
 }
 
 /** Maximale Zellgröße beim Hineinzoomen (px) */
@@ -137,18 +143,20 @@ export function WeekGrid({
   onZoomDelta,
   onCellClick,
   onCellContext,
+  onCellAux,
   onCellDown,
   onCellEnter,
   onLongPress,
+  jumpSignal,
 }: GridProps) {
   const years = lifeExpectancy;
   const total = years * 52;
-  const birthYear = new Date(birthDate).getFullYear();
+  const birthYear = parseLocalDate(birthDate).getFullYear();
   const curN = useMemo(() => currentWeekNum(birthDate), [birthDate]);
   const birthdayWeekN = useMemo(() => birthdayWeekNum(birthDate), [birthDate]);
   const milestoneWeeks = useMemo(
     () =>
-      showMilestones ? computeMilestoneWeeks(birthDate, lifeExpectancy) : new Map<number, string[]>(),
+      showMilestones ? computeMilestoneWeeks(birthDate, lifeExpectancy) : new Map<number, Milestone[]>(),
     [birthDate, lifeExpectancy, showMilestones]
   );
 
@@ -203,11 +211,11 @@ export function WeekGrid({
     return () => window.removeEventListener("resize", update);
   }, [zoomLevel, normalZoom, years]);
 
-  // Beim Zoomen immer auf die aktuelle Woche zentrieren
+  // Beim Zoomen (und auf Befehl) immer auf die aktuelle Woche zentrieren
   useEffect(() => {
     const el = wrapRef.current?.querySelector(`.lw-cell[data-n="${curN}"]`);
     el?.scrollIntoView({ block: "center", inline: "center" });
-  }, [cellSize, curN]);
+  }, [cellSize, curN, jumpSignal]);
 
   // Strg+Mausrad (Desktop) bzw. Trackpad-Pinch (sendet ctrl+wheel) zoomt.
   // Nativer Listener mit passive:false, damit preventDefault greift.
@@ -305,6 +313,16 @@ export function WeekGrid({
         <div className="lw-tip-dates">{lb.dates}</div>
         {tipN === birthdayWeekN && <div className="lw-tip-birthday">{t("birthday")}</div>}
         {data?.hasEntry && <div className="lw-tip-entry">{t("weekEntry")}</div>}
+        {data?.duplicates?.length ? (
+          <div className="lw-tip-warn">
+            {t("dupWeek", { n: data.duplicates.length + 1 })}
+            {[data.path, ...data.duplicates].map((p) => (
+              <div key={p} className="lw-tip-warn-file">
+                {p.slice(p.lastIndexOf("/") + 1)}
+              </div>
+            ))}
+          </div>
+        ) : null}
         {dayCount > 0 && (
           <div className="lw-tip-entry">
             📅 {dayCount === 8 ? t("daysFull") : t("days", { n: dayCount })}
@@ -313,15 +331,25 @@ export function WeekGrid({
         {milestones?.map((m, i) => (
           <div key={i} className="lw-tip-milestone">
             {t("milestonePrefix")}
-            {m}
+            {formatMilestone(m)}
           </div>
         ))}
       </div>
     );
   }, [tipN, birthDate, weeksData, birthdayWeekN, milestoneWeeks, dailyCounts]);
 
-  // Zählt alle Wochen mit Notiz im Tab (auch reine Farb-Einträge ohne Text)
-  const entryCount = useMemo(() => Object.keys(weeksData).length, [weeksData]);
+  // Zählt alle im Tab abrufbaren Einträge: Wochennotizen (auch reine
+  // Farb-Einträge) + Tagesnotizen, die in die Zeitachse dieses Tabs fallen
+  const weekCount = useMemo(() => Object.keys(weeksData).length, [weeksData]);
+  const dayCount = useMemo(
+    () =>
+      Object.keys(dailyIdx).filter((iso) => {
+        const wk = dateToGridWeek(birthDate, parseLocalDate(iso));
+        return wk >= 0 && wk < total;
+      }).length,
+    [dailyIdx, birthDate, total]
+  );
+  const entryCount = weekCount + dayCount;
   const livedPct = Math.min(100, (Math.max(0, curN) / total) * 100).toFixed(1);
 
   return (
@@ -337,6 +365,14 @@ export function WeekGrid({
           }
           const n = cellFromEvent(e);
           if (n !== null) onCellClick(n, e.clientX, e.clientY);
+        }}
+        onAuxClick={(e) => {
+          if (multiSelectMode || e.button !== 1) return;
+          const n = cellFromEvent(e);
+          if (n !== null) {
+            e.preventDefault();
+            onCellAux(n);
+          }
         }}
         onContextMenu={(e) => {
           if (multiSelectMode) return;
@@ -422,7 +458,14 @@ export function WeekGrid({
       </div>
 
       <div className="lw-counter-bar">
-        {t("counter", { cur: Math.max(0, curN + 1), total, pct: livedPct, count: entryCount })}
+        {t("counter", {
+          cur: Math.max(0, curN + 1),
+          total,
+          pct: livedPct,
+          count: entryCount,
+          weeks: weekCount,
+          days: dayCount,
+        })}
         {multiSelectMode && selectedWeeks.size > 0 && <> · {t("selected", { n: selectedWeeks.size })}</>}
       </div>
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { t } from "../i18n";
-import { PALETTE } from "./constants";
+import type { LegendState } from "../core/types";
+import { Palette } from "./Palette";
 
 /**
  * Aktionsleiste im Multi-Select-Modus: Farbe/Titel/Inhalt auf alle
@@ -9,10 +10,12 @@ import { PALETTE } from "./constants";
  */
 export function BulkActionBar({
   count,
+  legend,
   onApply,
   onClear,
 }: {
   count: number;
+  legend: LegendState;
   onApply: (color: string | null, title: string, content: string) => Promise<void>;
   onClear: () => void;
 }) {
@@ -35,28 +38,7 @@ export function BulkActionBar({
 
   return (
     <div className="lw-bulk-bar">
-      <div className="lw-qe-palette">
-        <div
-          className={`lw-swatch lw-swatch-none ${!color ? "active" : ""}`}
-          title={t("noColor")}
-          onClick={() => setColor(null)}
-        />
-        {PALETTE.map((c) => (
-          <div
-            key={c}
-            className={`lw-swatch ${color === c ? "active" : ""}`}
-            style={{ background: c }}
-            onClick={() => setColor(c)}
-          />
-        ))}
-        <input
-          type="color"
-          className="lw-swatch-custom"
-          value={color ?? "#c97c3a"}
-          onChange={(e) => setColor(e.target.value)}
-          title={t("customColor")}
-        />
-      </div>
+      <Palette legend={legend} value={color} onPick={setColor} />
       <input
         className="lw-bulk-title"
         placeholder={t("bulkTitle")}

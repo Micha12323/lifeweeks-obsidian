@@ -71,6 +71,14 @@ export function Legend({
     })
     .filter((x): x is NonNullable<typeof x> => !!x);
 
+  /** Pfeiltasten (Touch hat kein HTML5-Drag&Drop): mit sichtbarem Nachbarn tauschen */
+  const moveBy = (id: string, dir: -1 | 1) => {
+    const i = items.findIndex((it) => it.id === id);
+    const j = i + dir;
+    if (i === -1 || j < 0 || j >= items.length) return;
+    reorder(id, items[j].id);
+  };
+
   const reorder = (from: string, to: string) => {
     const arr = [...legend.order];
     const i = arr.indexOf(from);
@@ -104,6 +112,13 @@ export function Legend({
           }}
         >
           <span className="lw-drag-handle">⠿</span>
+          <button
+            className="lw-legend-move"
+            title={t("legendMoveLeft")}
+            onClick={() => moveBy(item.id, -1)}
+          >
+            ‹
+          </button>
           {item.type === "fixed" ? (
             <>
               <input
@@ -160,6 +175,13 @@ export function Legend({
               </button>
             </>
           )}
+          <button
+            className="lw-legend-move"
+            title={t("legendMoveRight")}
+            onClick={() => moveBy(item.id, 1)}
+          >
+            ›
+          </button>
         </div>
       ))}
       <button

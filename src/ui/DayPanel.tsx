@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { dayDates, localIso, weekKey } from "../core/dates";
-import type { TabWeeks } from "../core/types";
+import type { LegendState, TabWeeks } from "../core/types";
 import type { DailyIdx } from "../data/DailyIndex";
 import { displayWeekLabel, t, weekdayLabel } from "../i18n";
-import { PALETTE } from "./constants";
+import { Palette } from "./Palette";
 
 /**
  * Long-Press auf eine Zelle → Tagesansicht der Woche (Mo–So).
@@ -19,6 +19,7 @@ export function DayPanel({
   birthDate,
   weeksData,
   dailyIdx,
+  legend,
   onOpenDay,
   onOpenWeek,
   onWeekColor,
@@ -29,8 +30,10 @@ export function DayPanel({
   birthDate: string;
   weeksData: TabWeeks;
   dailyIdx: DailyIdx;
-  onOpenDay: (iso: string) => void;
-  onOpenWeek: (n: number) => void;
+  legend: LegendState;
+  /** background=true: Rechts-/Mittelklick → Hintergrund-Tab, Panel bleibt offen */
+  onOpenDay: (iso: string, background?: boolean) => void;
+  onOpenWeek: (n: number, background?: boolean) => void;
   onWeekColor: (n: number, color: string | null) => void;
   onWeekTitle: (n: number, title: string) => void;
   onClose: () => void;
@@ -76,11 +79,26 @@ export function DayPanel({
                 key={d.iso}
                 className={`lw-day-row ${isToday ? "today" : ""}`}
                 onClick={() => onOpenDay(d.iso)}
-                title={entry ? t("dayOpenTitle") : t("dayCreateTitle")}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  onOpenDay(d.iso, true);
+                }}
+                onAuxClick={(e) => e.button === 1 && onOpenDay(d.iso, true)}
+                title={`${entry ? t("dayOpenTitle") : t("dayCreateTitle")} – ${t("bgHint")}`}
               >
                 <span className="lw-day-dot" style={{ background: entry?.color ?? "transparent" }} />
                 <span className="lw-day-label">{weekdayLabel(d.date)}</span>
-                <span className="lw-day-title">{entry ? entry.title || "📝" : ""}</span>
+                <span className="lw-day-title">
+                  {entry ? entry.title || "📝" : ""}
+                  {entry?.duplicates?.length ? (
+                    <span
+                      className="lw-day-dup"
+                      title={t("dupDay", { n: entry.duplicates.length + 1, files: [entry.path, ...entry.duplicates].map((p) => p.slice(p.lastIndexOf("/") + 1)).join(", ") })}
+                    >
+                      {" "}⚠
+                    </span>
+                  ) : null}
+                </span>
                 <span className="lw-day-action">{entry ? t("dayOpen") : t("dayCreate")}</span>
               </button>
             );
@@ -88,28 +106,7 @@ export function DayPanel({
         </div>
 
         <div className="lw-day-week-edit">
-          <div className="lw-qe-palette">
-            <div
-              className={`lw-swatch lw-swatch-none ${!week?.color ? "active" : ""}`}
-              title={t("noColor")}
-              onClick={() => onWeekColor(n, null)}
-            />
-            {PALETTE.map((c) => (
-              <div
-                key={c}
-                className={`lw-swatch ${week?.color === c ? "active" : ""}`}
-                style={{ background: c }}
-                onClick={() => onWeekColor(n, c)}
-              />
-            ))}
-            <input
-              type="color"
-              className="lw-swatch-custom"
-              value={week?.color ?? "#c97c3a"}
-              onChange={(e) => onWeekColor(n, e.target.value)}
-              title={t("customColor")}
-            />
-          </div>
+          <Palette legend={legend} value={week?.color} onPick={(c) => onWeekColor(n, c)} />
           <input
             className="lw-qe-title"
             placeholder={t("titlePlaceholder")}
@@ -120,7 +117,16 @@ export function DayPanel({
               if (e.key === "Enter") commitTitle();
             }}
           />
-          <button className="lw-qe-open" onClick={() => onOpenWeek(n)}>
+          <button
+            className="lw-qe-open"
+            onClick={() => onOpenWeek(n)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              onOpenWeek(n, true);
+            }}
+            onAuxClick={(e) => e.button === 1 && onOpenWeek(n, true)}
+            title={t("bgHint")}
+          >
             {week ? t("weekNoteOpen") : t("weekNoteCreate")}
           </button>
         </div>

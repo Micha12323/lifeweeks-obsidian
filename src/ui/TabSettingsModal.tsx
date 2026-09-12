@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import type { TabConfig } from "../core/types";
+import { parseLocalDate } from "../core/dates";
 import { fmtDateLocal, t } from "../i18n";
 
 /**
@@ -43,9 +44,9 @@ export function TabSettingsModal({
   const endDate =
     useOwn && birthDate
       ? new Date(
-          new Date(birthDate).getFullYear() + (parseInt(lifeExp, 10) || 0),
-          new Date(birthDate).getMonth(),
-          new Date(birthDate).getDate()
+          parseLocalDate(birthDate).getFullYear() + (parseInt(lifeExp, 10) || 0),
+          parseLocalDate(birthDate).getMonth(),
+          parseLocalDate(birthDate).getDate()
         )
       : null;
 
@@ -93,7 +94,7 @@ export function TabSettingsModal({
             </label>
             {endDate && (
               <p className="lw-muted lw-modal-note">
-                {t("period", { from: fmtDateLocal(new Date(birthDate)), to: fmtDateLocal(endDate) })}
+                {t("period", { from: fmtDateLocal(parseLocalDate(birthDate)), to: fmtDateLocal(endDate) })}
               </p>
             )}
           </>

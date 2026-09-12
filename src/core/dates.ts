@@ -8,8 +8,19 @@ import type { WeekLabel } from "./types";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
+/**
+ * "YYYY-MM-DD" → lokale Mitternacht. new Date("YYYY-MM-DD") würde UTC parsen
+ * und westlich von Greenwich auf den Vortag fallen (Geburtsjahr, Meilensteine,
+ * Datumsbereich wären dort um einen Tag verschoben).
+ */
+export function parseLocalDate(iso: string): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? "");
+  if (!m) return new Date(NaN);
+  return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+}
+
 export function gridStart(bd: string): Date {
-  return new Date(new Date(bd).getFullYear(), 0, 1);
+  return new Date(parseLocalDate(bd).getFullYear(), 0, 1);
 }
 
 /** Montag der Woche, die den 1. Januar des jeweiligen Jahres enthält (ISO-Ausrichtung). */
@@ -22,7 +33,7 @@ export function rowMonday(birthYear: number, y: number): Date {
 }
 
 export function weekStartDate(bd: string, n: number): Date {
-  const birthYear = new Date(bd).getFullYear();
+  const birthYear = parseLocalDate(bd).getFullYear();
   const y = Math.floor(n / 52);
   const w = n % 52;
   const base = new Date(rowMonday(birthYear, y));
@@ -48,7 +59,7 @@ export function weekKey(bd: string, n: number): string {
 export function currentWeekNum(bd: string, today: Date = new Date()): number {
   const t = new Date(today);
   t.setHours(0, 0, 0, 0);
-  const birthYear = new Date(bd).getFullYear();
+  const birthYear = parseLocalDate(bd).getFullYear();
   const approxY = t.getFullYear() - birthYear;
   for (let y = Math.max(0, approxY - 1); y <= approxY + 1; y++) {
     const mon = rowMonday(birthYear, y);
@@ -64,15 +75,28 @@ export function currentWeekNum(bd: string, today: Date = new Date()): number {
 }
 
 export function birthdayWeekNum(bd: string): number {
-  const diff = new Date(bd).getTime() - gridStart(bd).getTime();
+  const diff = parseLocalDate(bd).getTime() - gridStart(bd).getTime();
   return diff < 0 ? 0 : Math.floor(diff / WEEK_MS);
 }
 
+/**
+ * Tatsächliches Alter: volle Kalenderjahre seit dem Geburtstag + Wochen seit
+ * dem letzten Geburtstag. (Nicht Gesamtwochen/52: ein Jahr hat 52,18 Wochen,
+ * über Jahrzehnte driftet das um mehrere Wochen.)
+ */
 export function actualAge(bd: string, now: Date = new Date()): { years: number; weeks: number } {
-  const diff = now.getTime() - new Date(bd).getTime();
-  if (diff < 0) return { years: 0, weeks: 0 };
-  const w = Math.floor(diff / WEEK_MS);
-  return { years: Math.floor(w / 52), weeks: w % 52 };
+  const birth = parseLocalDate(bd);
+  const bm = birth.getMonth();
+  const bdDay = birth.getDate();
+  if (now < birth) return { years: 0, weeks: 0 };
+  let years = now.getFullYear() - birth.getFullYear();
+  let last = new Date(now.getFullYear(), bm, bdDay);
+  if (last > now) {
+    years--;
+    last = new Date(now.getFullYear() - 1, bm, bdDay);
+  }
+  const weeks = Math.floor((now.getTime() - last.getTime()) / WEEK_MS);
+  return { years, weeks: Math.min(52, weeks) };
 }
 
 export function fmt(d: Date): string {
@@ -149,7 +173,7 @@ export function isoWeek(d: Date): number {
  * rowMonday-Verschiebungen.
  */
 export function dateToGridWeek(birthDate: string, date: Date): number {
-  const approxY = Math.max(0, date.getFullYear() - new Date(birthDate).getFullYear() - 1);
+  const approxY = Math.max(0, date.getFullYear() - parseLocalDate(birthDate).getFullYear() - 1);
   for (let y = approxY; y <= approxY + 3; y++) {
     const yStart = weekStartDate(birthDate, y * 52);
     const yEnd = weekStartDate(birthDate, (y + 1) * 52);
@@ -171,7 +195,7 @@ export function fileDateToWeekNum(
   fileDate: Date,
   maxYears: number
 ): number | null {
-  const birthYear = new Date(birthDate).getFullYear();
+  const birthYear = parseLocalDate(birthDate).getFullYear();
   const year = fileDate.getFullYear();
   for (const yTry of [year - birthYear, year - birthYear + 1]) {
     if (yTry < 0 || yTry >= maxYears) continue;

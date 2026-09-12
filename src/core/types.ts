@@ -11,6 +11,8 @@ export interface WeekData {
   title: string;
   /** Vault-Pfad der Wochennotiz */
   path: string;
+  /** Weitere Dateien derselben Woche (nicht angezeigt) – Duplikat-Warnung im Tooltip */
+  duplicates?: string[];
 }
 
 /** weekKey (lokales ISO-Datum des Wochenbeginns) → Daten */

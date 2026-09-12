@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { WeekData } from "../core/types";
+import type { LegendState, WeekData } from "../core/types";
 import { displayWeekLabel, t } from "../i18n";
-import { PALETTE } from "./constants";
+import { Palette } from "./Palette";
 
 interface QuickEditProps {
   n: number;
@@ -10,9 +10,11 @@ interface QuickEditProps {
   y: number;
   birthDate: string;
   data: WeekData | null;
+  legend: LegendState;
   onColor: (n: number, color: string | null) => void;
   onTitle: (n: number, title: string) => void;
-  onOpen: (n: number) => void;
+  /** background=true: Rechts-/Mittelklick → Hintergrund-Tab, Popover bleibt offen */
+  onOpen: (n: number, background?: boolean) => void;
   onClose: () => void;
 }
 
@@ -23,7 +25,7 @@ interface QuickEditProps {
  * Wird per Portal in document.body gerendert: Obsidian-Leaves setzen
  * contain:strict, wodurch position:fixed sonst am (schmalen) Panel klebt.
  */
-export function WeekQuickEdit({ n, x, y, birthDate, data, onColor, onTitle, onOpen, onClose }: QuickEditProps) {
+export function WeekQuickEdit({ n, x, y, birthDate, data, legend, onColor, onTitle, onOpen, onClose }: QuickEditProps) {
   const lb = displayWeekLabel(birthDate, n);
   const [title, setTitle] = useState(data?.title ?? "");
   const ref = useRef<HTMLDivElement>(null);
@@ -65,28 +67,7 @@ export function WeekQuickEdit({ n, x, y, birthDate, data, onColor, onTitle, onOp
           </button>
         </div>
 
-        <div className="lw-qe-palette">
-          <div
-            className={`lw-swatch lw-swatch-none ${!data?.color ? "active" : ""}`}
-            title={t("noColor")}
-            onClick={() => onColor(n, null)}
-          />
-          {PALETTE.map((c) => (
-            <div
-              key={c}
-              className={`lw-swatch ${data?.color === c ? "active" : ""}`}
-              style={{ background: c }}
-              onClick={() => onColor(n, c)}
-            />
-          ))}
-          <input
-            type="color"
-            className="lw-swatch-custom"
-            value={data?.color ?? "#c97c3a"}
-            onChange={(e) => onColor(n, e.target.value)}
-            title={t("customColor")}
-          />
-        </div>
+        <Palette legend={legend} value={data?.color} onPick={(c) => onColor(n, c)} />
 
         <input
           className="lw-qe-title"
@@ -99,7 +80,16 @@ export function WeekQuickEdit({ n, x, y, birthDate, data, onColor, onTitle, onOp
           }}
         />
 
-        <button className="lw-qe-open" onClick={() => onOpen(n)}>
+        <button
+          className="lw-qe-open"
+          onClick={() => onOpen(n)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            onOpen(n, true);
+          }}
+          onAuxClick={(e) => e.button === 1 && onOpen(n, true)}
+          title={t("bgHint")}
+        >
           {data ? t("openNote") : t("createNote")}
         </button>
       </div>

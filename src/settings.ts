@@ -53,6 +53,8 @@ export class LifeWeeksSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.basePath = value.replace(/^\/+|\/+$/g, "");
             await this.plugin.saveSettings();
+            // Sync-Datei liegt im Basisordner → bei Pfadwechsel neu einlesen
+            await this.plugin.loadVaultConfig({ migrate: false });
           })
       );
 

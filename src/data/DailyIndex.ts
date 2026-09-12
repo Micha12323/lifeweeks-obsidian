@@ -12,6 +12,8 @@ export interface DayData {
   color: string | null;
   title: string;
   path: string;
+  /** Weitere Dateien desselben Tages (nicht angezeigt) */
+  duplicates?: string[];
 }
 
 /** iso (yyyy-mm-dd) → Daten */
@@ -37,10 +39,14 @@ export function buildDailyIndex(app: App, folderPath: string): DailyIdx {
     let title = typeof fm.title === "string" ? fm.title : "";
     if (!title) title = dailyTitleFromFilename(child.name);
 
-    // Bei mehreren Dateien pro Tag gewinnt die mit Titel
+    // Bei mehreren Dateien pro Tag gewinnt die mit Titel, die anderen werden gemerkt
     const prev = result[iso];
-    if (prev && prev.title && !title) continue;
-    result[iso] = { color, title, path: child.path };
+    if (prev && prev.title && !title) {
+      prev.duplicates = [...(prev.duplicates ?? []), child.path];
+      continue;
+    }
+    const duplicates = prev ? [...(prev.duplicates ?? []), prev.path] : undefined;
+    result[iso] = { color, title, path: child.path, ...(duplicates ? { duplicates } : {}) };
   }
   return result;
 }

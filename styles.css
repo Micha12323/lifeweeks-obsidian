@@ -205,6 +205,31 @@
 .lw-legend-item:hover .lw-legend-remove {
   opacity: 1;
 }
+/* Sortier-Pfeile: Desktop nur beim Hover (Drag&Drop ist Standard),
+   Mobile immer sichtbar, weil HTML5-Drag&Drop auf Touch nicht funktioniert */
+.lw-legend-move {
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.lw-legend-item:hover .lw-legend-move {
+  opacity: 1;
+}
+.is-mobile .lw-legend-move {
+  opacity: 1;
+  font-size: 18px;
+  padding: 0 6px;
+}
+.is-mobile .lw-drag-handle {
+  display: none;
+}
 .lw-grid-center {
   display: flex;
   overflow: auto;
@@ -222,6 +247,10 @@
   flex-direction: column;
   gap: 0;
   width: fit-content;
+  /* Zentriert das Grid auch dann, wenn die (umbrechende) Legende breiter ist
+     als das Grid und .lw-grid-inner dadurch die volle Breite einnimmt.
+     Auto-Ränder werden bei Überbreite zu 0 → nichts wird links abgeschnitten. */
+  margin: 0 auto;
 }
 .lw-grid-hrow,
 .lw-grid-row {
@@ -416,6 +445,21 @@
   color: #aaa;
 }
 
+.lw-tip-warn {
+  margin-top: 4px;
+  color: var(--text-warning, #d9a400);
+}
+.lw-tip-warn-file {
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+  opacity: 0.85;
+  padding-left: 1em;
+}
+.lw-day-dup {
+  color: var(--text-warning, #d9a400);
+  cursor: help;
+}
+
 /* ── COUNTER BAR ────────────────────────────────── */
 .lw-counter-bar {
   font-size: 0.7rem;
@@ -481,6 +525,13 @@
 }
 .lw-swatch.active {
   border-color: var(--text-normal);
+}
+/* Legendenfarben: leicht abgerundeter, Trenner vor der Standardpalette */
+.lw-swatch-legend {
+  border-radius: 50%;
+}
+.lw-swatch-sep {
+  margin-left: 6px;
 }
 .lw-swatch-none {
   background: var(--background-secondary);

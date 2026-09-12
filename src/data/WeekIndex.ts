@@ -64,10 +64,15 @@ export function buildWeekIndex(
     if (!title) title = titleFromFilename(child.name);
     const hasEntry = (cache?.sections ?? []).some((s) => s.type !== "yaml");
 
-    // Duplikate (gleiche Woche, mehrere Dateien): Datei mit Eintrag gewinnt
+    // Duplikate (gleiche Woche, mehrere Dateien): Datei mit Eintrag gewinnt,
+    // die anderen werden für die Warnung im Tooltip gemerkt
     const prev = result[wk];
-    if (prev && prev.hasEntry && !hasEntry) continue;
-    result[wk] = { color, hasEntry, title, path: child.path };
+    if (prev && prev.hasEntry && !hasEntry) {
+      prev.duplicates = [...(prev.duplicates ?? []), child.path];
+      continue;
+    }
+    const duplicates = prev ? [...(prev.duplicates ?? []), prev.path] : undefined;
+    result[wk] = { color, hasEntry, title, path: child.path, ...(duplicates ? { duplicates } : {}) };
   }
   return result;
 }

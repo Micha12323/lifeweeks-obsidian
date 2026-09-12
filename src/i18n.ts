@@ -7,6 +7,7 @@
 
 import { getLanguage, moment } from "obsidian";
 import { weekStartDate } from "./core/dates";
+import type { Milestone } from "./core/milestones";
 
 export function obsidianLocale(): string {
   // 1) Obsidian-Oberflächensprache (z.B. "de", "en")
@@ -40,6 +41,8 @@ const DE: Dict = {
   zoomModeTitle: "Ansicht umschalten → {next}",
   dateRangeBtn: "📅",
   dateRangeTitle: "Zeitraum auswählen",
+  todayBtn: "📝",
+  todayTitle: "Heutige Tagesnotiz öffnen (aktiver Tab)",
   dateRangeHint: "Markiert alle Wochen im Zeitraum (Mehrfachauswahl).",
   from: "Von",
   to: "Bis",
@@ -51,14 +54,26 @@ const DE: Dict = {
   legendAddTitle: "Legendeneintrag hinzufügen",
   legendRename: "Klicken zum Umbenennen",
   legendNew: "Neu",
-  counter: "Woche {cur} von {total} · {pct}% gelebt · {count} Einträge",
+  legendMoveLeft: "Nach links",
+  legendMoveRight: "Nach rechts",
+  cmdOpenToday: "Heutige Tagesnotiz öffnen",
+  cmdJumpCurrent: "Zur aktuellen Woche springen",
+  counter: "Woche {cur} von {total} · {pct}% gelebt · {count} Einträge ({weeks} Wochen, {days} Tage)",
   selected: "{n} ausgewählt",
   yearWeek: "Jahr {y}, Woche {w}",
   birthday: "🎂 Geburtstag",
   weekEntry: "📝 Wocheneintrag",
+  dupWeek: "⚠ {n} Dateien für diese Woche – nur die erste wird angezeigt:",
+  dupDay: "{n} Dateien für diesen Tag – nur die erste wird angezeigt: {files}",
   daysFull: "7 Tage vollständig",
   days: "{n} Tag(e)",
   milestonePrefix: "🎯 ",
+  msDays: "Tage",
+  msWeeks: "Wochen",
+  msMonths: "Monate",
+  msQuarters: "Quartale",
+  msMinutes: "Minuten",
+  msSeconds: "Sekunden",
   noColor: "Keine Farbe",
   customColor: "Eigene Farbe",
   close: "Schließen",
@@ -71,6 +86,7 @@ const DE: Dict = {
   dayCreateTitle: "Tagesnotiz anlegen",
   weekNoteOpen: "📝 Wochennotiz öffnen",
   weekNoteCreate: "📝 Wochennotiz anlegen",
+  bgHint: "Rechts- oder Mittelklick: im Hintergrund-Tab öffnen",
   bulkTitle: "Titel…",
   bulkContent: "Markdown-Inhalt (optional)…",
   bulkApply: "Auf {n} Wochen anwenden",
@@ -89,6 +105,8 @@ const DE: Dict = {
   noTabs: "Keine Tabs gefunden – Ordner unter „{path}/Weekly basis/“ anlegen oder + klicken.",
   newTabPlaceholder: "Neuer Tab…",
   addTabTitle: "Neuen Tab anlegen (Ordner unter Weekly basis/)",
+  tabRenamed: "Tab „{from}“ → „{to}“: Legende und Zeitachse übernommen.",
+  tabRenamedDaily: "Tab „{from}“ → „{to}“: Legende, Zeitachse und Tagesordner übernommen.",
   ownAxis: "Eigene Zeitachse",
   tabAxisTitle: "Zeitachse: {tab}",
   tabSettingsTitle: "Zeitachse dieses Tabs",
@@ -137,6 +155,8 @@ const EN: Dict = {
   zoomModeTitle: "Switch view → {next}",
   dateRangeBtn: "📅",
   dateRangeTitle: "Select date range",
+  todayBtn: "📝",
+  todayTitle: "Open today's daily note (current tab)",
   dateRangeHint: "Selects all weeks in the range (multi-select).",
   from: "From",
   to: "To",
@@ -148,14 +168,26 @@ const EN: Dict = {
   legendAddTitle: "Add legend item",
   legendRename: "Click to rename",
   legendNew: "New",
-  counter: "Week {cur} of {total} · {pct}% lived · {count} entries",
+  legendMoveLeft: "Move left",
+  legendMoveRight: "Move right",
+  cmdOpenToday: "Open today's daily note",
+  cmdJumpCurrent: "Jump to current week",
+  counter: "Week {cur} of {total} · {pct}% lived · {count} entries ({weeks} weeks, {days} days)",
   selected: "{n} selected",
   yearWeek: "Year {y}, Week {w}",
   birthday: "🎂 Birthday",
   weekEntry: "📝 Week entry",
+  dupWeek: "⚠ {n} files for this week – only the first one is shown:",
+  dupDay: "{n} files for this day – only the first one is shown: {files}",
   daysFull: "7 days complete",
   days: "{n} day(s)",
   milestonePrefix: "🎯 ",
+  msDays: "days",
+  msWeeks: "weeks",
+  msMonths: "months",
+  msQuarters: "quarters",
+  msMinutes: "minutes",
+  msSeconds: "seconds",
   noColor: "No color",
   customColor: "Custom color",
   close: "Close",
@@ -168,6 +200,7 @@ const EN: Dict = {
   dayCreateTitle: "Create daily note",
   weekNoteOpen: "📝 Open week note",
   weekNoteCreate: "📝 Create week note",
+  bgHint: "Right- or middle-click: open in a background tab",
   bulkTitle: "Title…",
   bulkContent: "Markdown content (optional)…",
   bulkApply: "Apply to {n} weeks",
@@ -186,6 +219,8 @@ const EN: Dict = {
   noTabs: "No tabs found – create folders under “{path}/Weekly basis/” or click +.",
   newTabPlaceholder: "New tab…",
   addTabTitle: "Create a new tab (folder under Weekly basis/)",
+  tabRenamed: "Tab “{from}” → “{to}”: legend and timeline carried over.",
+  tabRenamedDaily: "Tab “{from}” → “{to}”: legend, timeline and daily folder carried over.",
   ownAxis: "Own timeline",
   tabAxisTitle: "Timeline: {tab}",
   tabSettingsTitle: "Timeline of this tab",
@@ -230,6 +265,17 @@ export function t(key: string, vars?: Record<string, string | number>): string {
   let s = dict[key] ?? EN[key] ?? key;
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
   return s;
+}
+
+/** Meilenstein-Beschriftung in der UI-Sprache, z.B. "10.000 Tage" / "1.1B seconds". */
+export function formatMilestone(m: Milestone): string {
+  const locale = obsidianLocale();
+  const num =
+    m.n >= 1000000
+      ? new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 3 }).format(m.n)
+      : m.n.toLocaleString(locale);
+  const unitKey = "ms" + m.unit.charAt(0).toUpperCase() + m.unit.slice(1);
+  return `${num} ${t(unitKey)}`;
 }
 
 /** Datum im Format der Obsidian-Sprache (alle Locales via Intl). */

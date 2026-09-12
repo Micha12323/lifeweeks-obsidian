@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  actualAge,
   complementaryHex,
   currentWeekNum,
   dateToGridWeek,
   fileDateToWeekNum,
   isoWeek,
   localIso,
+  parseLocalDate,
   rowMonday,
   weekKey,
   weekLabel,
@@ -123,5 +125,30 @@ describe("weekLabel / complementaryHex", () => {
     expect(complementaryHex("#ffffff")).toBe("#000000");
     expect(complementaryHex("#c97c3a")).toBe("#3683c5");
     expect(complementaryHex(null)).toBe("#000000");
+  });
+});
+
+describe("actualAge", () => {
+  it("zählt Kalenderjahre + Wochen seit dem letzten Geburtstag (keine 52-Wochen-Drift)", () => {
+    // 12.09.2026: 34 Jahre, seit 10.11.2025 sind 306 Tage = 43 volle Wochen vergangen
+    expect(actualAge(BD, new Date(2026, 8, 12))).toEqual({ years: 34, weeks: 43 });
+  });
+  it("am Geburtstag selbst: neues Jahr, 0 Wochen; Tag davor: altes Jahr", () => {
+    expect(actualAge(BD, new Date(2026, 10, 10))).toEqual({ years: 35, weeks: 0 });
+    expect(actualAge(BD, new Date(2026, 10, 9))).toEqual({ years: 34, weeks: 52 });
+  });
+  it("vor der Geburt: 0/0", () => {
+    expect(actualAge(BD, new Date(1990, 0, 1))).toEqual({ years: 0, weeks: 0 });
+  });
+});
+
+describe("parseLocalDate", () => {
+  it("liefert lokale Mitternacht, nicht UTC", () => {
+    const d = parseLocalDate("1991-11-10");
+    expect([d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()]).toEqual([1991, 10, 10, 0]);
+  });
+  it("ungültige Eingabe → Invalid Date", () => {
+    expect(isNaN(parseLocalDate("").getTime())).toBe(true);
+    expect(isNaN(parseLocalDate("10.11.1991").getTime())).toBe(true);
   });
 });
