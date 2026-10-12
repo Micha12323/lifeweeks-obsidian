@@ -46,8 +46,8 @@ export function parseVaultConfig(content: string): VaultConfig | null {
     const raw = JSON.parse(m[1]) as Partial<VaultConfig> | null;
     if (!raw || typeof raw !== "object") return null;
     return {
-      legends: isRecord(raw.legends) ? (raw.legends as VaultConfig["legends"]) : {},
-      tabConfigs: isRecord(raw.tabConfigs) ? (raw.tabConfigs as VaultConfig["tabConfigs"]) : {},
+      legends: isRecord(raw.legends) ? raw.legends : {},
+      tabConfigs: isRecord(raw.tabConfigs) ? raw.tabConfigs : {},
     };
   } catch {
     return null;

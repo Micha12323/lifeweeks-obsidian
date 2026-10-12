@@ -138,7 +138,7 @@ export default class LifeWeeksPlugin extends Plugin {
   private async withView(fn: (a: ViewActions) => void): Promise<void> {
     await this.activateView();
     for (let i = 0; i < 20 && !this.viewActions; i++) {
-      await new Promise((r) => setTimeout(r, 50));
+      await new Promise((r) => window.setTimeout(r, 50));
     }
     if (this.viewActions) fn(this.viewActions);
   }

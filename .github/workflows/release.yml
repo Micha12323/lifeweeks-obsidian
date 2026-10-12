@@ -33,7 +33,7 @@ jobs:
       - name: Collect release assets
         run: |
           mkdir -p release
-          cp test-vault/.obsidian/plugins/lifeweeks/main.js release/main.js
+          cp main.js release/main.js
           cp manifest.json release/manifest.json
           cp styles.css release/styles.css
 
