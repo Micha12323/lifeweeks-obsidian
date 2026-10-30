@@ -1,4 +1,5 @@
-import { Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
+import { Platform } from "obsidian";
+import { Fragment, memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   birthdayWeekNum,
@@ -14,6 +15,7 @@ import { computeMilestoneWeeks, Milestone } from "../core/milestones";
 import type { LegendState, TabWeeks } from "../core/types";
 import type { DailyIdx } from "../data/DailyIndex";
 import { displayWeekLabel, formatMilestone, t } from "../i18n";
+import type { PreviewFn } from "../data/NotePreview";
 import { FIXED_WIDTH } from "./constants";
 import { Legend } from "./Legend";
 
@@ -39,6 +41,8 @@ interface GridProps {
   onLongPress: (n: number) => void;
   /** Zähler: jede Erhöhung scrollt zur aktuellen Woche (Befehl „Zur aktuellen Woche springen“) */
   jumpSignal?: number;
+  /** Desktop-Hover: Kurz-Vorschau des Notizinhalts im Tooltip */
+  getPreview?: PreviewFn;
 }
 
 /** Maximale Zellgröße beim Hineinzoomen (px) */
@@ -148,6 +152,7 @@ export function WeekGrid({
   onCellEnter,
   onLongPress,
   jumpSignal,
+  getPreview,
 }: GridProps) {
   const years = lifeExpectancy;
   const total = years * 52;
@@ -263,12 +268,44 @@ export function WeekGrid({
   // ── Ein globaler Tooltip per Event-Delegation (statt 4680 Instanzen) ──
   const [tipN, setTipN] = useState<number | null>(null);
   const tipRef = useRef<HTMLDivElement>(null);
+  const lastMouse = useRef({ x: 0, y: 0 });
+  /** Tooltip neben den Mauszeiger setzen, an Fensterrändern auf die andere Seite klappen */
   const moveTip = (x: number, y: number) => {
-    if (tipRef.current) {
-      tipRef.current.style.left = `${x + 14}px`;
-      tipRef.current.style.top = `${y - 52}px`;
-    }
+    lastMouse.current = { x, y };
+    const el = tipRef.current;
+    if (!el) return;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    let left = x + 14;
+    let top = y - 52;
+    if (left + w > window.innerWidth - 8) left = Math.max(8, x - w - 14);
+    if (top + h > window.innerHeight - 8) top = window.innerHeight - h - 8;
+    if (top < 8) top = 8;
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
   };
+
+  // Hover-Vorschau des Wocheneintrags (nur Desktop, kurz verzögert gegen Flackern)
+  const [tipPreview, setTipPreview] = useState<{ n: number; text: string } | null>(null);
+  useEffect(() => {
+    if (tipN === null || !getPreview || Platform.isMobile) return;
+    const data = weeksData[weekKey(birthDate, tipN)];
+    if (!data?.hasEntry) return;
+    let alive = true;
+    const timer = window.setTimeout(() => {
+      void getPreview(data.path).then((text) => {
+        if (alive) setTipPreview({ n: tipN, text });
+      });
+    }, 120);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, [tipN, getPreview, weeksData, birthDate]);
+  // Nach dem Nachladen ist der Tooltip größer → Position neu berechnen
+  useLayoutEffect(() => {
+    moveTip(lastMouse.current.x, lastMouse.current.y);
+  }, [tipPreview, tipN]);
   const cellFromEvent = (e: { target: EventTarget | null }): number | null => {
     const el = (e.target as HTMLElement | null)?.closest<HTMLElement>(".lw-cell") ?? null;
     return el ? Number(el.dataset.n) : null;
@@ -312,7 +349,12 @@ export function WeekGrid({
         )}
         <div className="lw-tip-dates">{lb.dates}</div>
         {tipN === birthdayWeekN && <div className="lw-tip-birthday">{t("birthday")}</div>}
-        {data?.hasEntry && <div className="lw-tip-entry">{t("weekEntry")}</div>}
+        {data?.hasEntry &&
+          (tipPreview?.n === tipN && tipPreview.text ? (
+            <div className="lw-tip-preview">{tipPreview.text}</div>
+          ) : (
+            <div className="lw-tip-entry">{t("weekEntry")}</div>
+          ))}
         {data?.duplicates?.length ? (
           <div className="lw-tip-warn">
             {t("dupWeek", { n: data.duplicates.length + 1 })}
@@ -336,7 +378,7 @@ export function WeekGrid({
         ))}
       </div>
     );
-  }, [tipN, birthDate, weeksData, birthdayWeekN, milestoneWeeks, dailyCounts]);
+  }, [tipN, birthDate, weeksData, birthdayWeekN, milestoneWeeks, dailyCounts, tipPreview]);
 
   // Zählt alle im Tab abrufbaren Einträge: Wochennotizen (auch reine
   // Farb-Einträge) + Tagesnotizen, die in die Zeitachse dieses Tabs fallen

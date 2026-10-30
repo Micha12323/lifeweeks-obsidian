@@ -1,4 +1,4 @@
-# Life in Weeks – Obsidian Plugin
+# Life in 4k Weeks Calendar – Obsidian Plugin
 
 A "Life in Weeks" grid rendered over the weekly and daily notes in your vault. Each cell is one week of your life – click it to open or create the matching note. Great for journaling and for tracking separate timelines (children, pets, relationships, jobs …) side by side.
 
@@ -7,12 +7,12 @@ A "Life in Weeks" grid rendered over the weekly and daily notes in your vault. E
 - Multi-select to edit many weeks at once
 - Add tabs for separate grids, each with its own legend (sortable by drag on desktop, arrows on mobile)
 
-![Life in Weeks grid in Obsidian](docs/grid.png)
+![Life in 4k Weeks Calendar grid in Obsidian](docs/grid.png)
 
 ## Installation
 
 1. Open **Settings → Community plugins** and turn off restricted mode if needed
-2. **Browse** → search for **"Life in Weeks"**
+2. **Browse** → search for **"Life in 4k Weeks Calendar"**
 3. **Install** → **Enable**
 4. Click the calendar icon in the left sidebar
 
@@ -21,7 +21,7 @@ A "Life in Weeks" grid rendered over the weekly and daily notes in your vault. E
 
 1. Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/Micha12323/lifeweeks-obsidian/releases/latest)
 2. Copy them into `<your-vault>/.obsidian/plugins/lifeweeks/`
-3. **Settings → Community plugins → Reload**, then enable **Life in Weeks**
+3. **Settings → Community plugins → Reload**, then enable **Life in 4k Weeks Calendar**
 
 </details>
 
@@ -45,7 +45,8 @@ Tabs are auto-detected from the subfolders of `Weekly basis/` – no extra confi
 | Middle-click | Opens the note in a **background tab** | – |
 
 - **Today:** the **📝** button in the header opens (or creates) today's daily note in the current tab; right-/middle-click opens it in a background tab.
-- **Commands:** *Open today's daily note* and *Jump to current week* are available in the command palette (assign hotkeys in *Settings → Hotkeys*). Both open the Life in Weeks view first if needed.
+- **Commands:** *Open today's daily note* and *Jump to current week* are available in the command palette (assign hotkeys in *Settings → Hotkeys*). Both open the Life in 4k Weeks Calendar view first if needed.
+- **Hover preview (desktop):** hovering a week with a note shows the first lines of that note in the tooltip; in the long-press day view, hovering a day shows a short preview of its daily note.
 - **Duplicates:** if two files exist for the same week (or day), the one with content (or a title) is shown and the tooltip / day view warns with a ⚠ and lists the file names, so you can merge or delete the extra file yourself. Nothing is deleted automatically.
 - **Counter bar:** the line below the grid counts every entry reachable from the current tab – week notes plus the daily notes that fall into the tab's timeline.
 - **Background tabs (desktop):** right-click or middle-click a day in the day view, or the *Open note* button in Quick-Edit / day view, to open that note in a new Obsidian tab without leaving the grid. The panel stays open, so you can queue several days or weeks and read them afterwards.

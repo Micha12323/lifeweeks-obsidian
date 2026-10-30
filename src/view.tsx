@@ -20,7 +20,7 @@ export class LifeWeeksView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Life in Weeks";
+    return "Life in 4k Weeks Calendar";
   }
 
   getIcon(): string {

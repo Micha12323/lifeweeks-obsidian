@@ -444,6 +444,39 @@
 .lw-tip-milestone {
   color: #aaa;
 }
+/* Hover-Vorschau: Notizinhalt als Kurztext (Wochen-Tooltip + Tagesansicht) */
+.lw-tip-preview {
+  margin: 3px 0 2px;
+  padding-top: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  white-space: pre-wrap;
+  width: max-content;
+  max-width: 300px;
+  opacity: 0.92;
+}
+.lw-day-preview {
+  position: fixed;
+  z-index: 2001;
+  pointer-events: none;
+  width: max-content;
+  max-width: 320px;
+  background: rgba(30, 20, 10, 0.92);
+  color: #fff;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  box-shadow: var(--shadow-s, 0 4px 18px rgba(0, 0, 0, 0.25));
+}
+.lw-day-preview-text {
+  white-space: pre-wrap;
+  margin: 3px 0;
+  opacity: 0.92;
+}
+.lw-day-preview-hint {
+  opacity: 0.55;
+  font-size: 0.9em;
+}
 
 .lw-tip-warn {
   margin-top: 4px;

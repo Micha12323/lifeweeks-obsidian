@@ -25,10 +25,10 @@ const HEADER = [
   "lifeweeks: config",
   "---",
   "",
-  "Diese Datei wird vom Plugin **Life in Weeks** verwaltet (Legenden und Tab-Einstellungen aller Tabs).",
+  "Diese Datei wird vom Plugin **Life in 4k Weeks Calendar** verwaltet (Legenden und Tab-Einstellungen aller Tabs).",
   "Sie liegt bewusst im Vault, damit sie mit auf andere Geräte synchronisiert wird. Nicht von Hand bearbeiten.",
   "",
-  "This file is managed by the **Life in Weeks** plugin (legends and tab settings of all tabs).",
+  "This file is managed by the **Life in 4k Weeks Calendar** plugin (legends and tab settings of all tabs).",
   "It lives in the vault on purpose so it syncs to your other devices. Do not edit by hand.",
   "",
 ].join("\n");

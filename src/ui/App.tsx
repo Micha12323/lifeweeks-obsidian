@@ -9,6 +9,7 @@ import {
 } from "../core/filenames";
 import type { LegendState, TabConfig } from "../core/types";
 import { buildDailyIndex, dailyBasisPath } from "../data/DailyIndex";
+import { createPreviewReader } from "../data/NotePreview";
 import {
   buildWeekIndex,
   getFile,
@@ -65,6 +66,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
   }, []);
 
   const settings = plugin.settings;
+  const getPreview = useMemo(() => createPreviewReader(app), [app]);
 
   // Legenden/Tab-Konfiguration per Sync von einem anderen Gerät geändert → neu rendern
   useEffect(
@@ -607,6 +609,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
         onCellEnter={handleCellEnter}
         onLongPress={(n) => setDayPanelN(n)}
         jumpSignal={jumpSignal}
+        getPreview={getPreview}
       />
 
       {multiSelectMode && selectedWeeks.size > 0 && (
@@ -640,6 +643,7 @@ export function LifeWeeksApp({ plugin }: { plugin: LifeWeeksPlugin }) {
           weeksData={weeksData}
           dailyIdx={dailyIdx}
           legend={legend}
+          getPreview={getPreview}
           onOpenDay={(iso, bg) => void handleOpenDay(iso, bg)}
           onOpenWeek={(n, bg) => void handleOpen(n, bg)}
           onWeekColor={(n, color) => void handleColor(n, color)}

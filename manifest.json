@@ -1,9 +1,9 @@
 {
   "id": "lifeweeks",
-  "name": "Life in Weeks",
-  "version": "0.2.9",
+  "name": "Life in 4k Weeks Calendar",
+  "version": "0.3.0",
   "minAppVersion": "1.8.7",
-  "description": "Render a life-in-weeks grid over your vault's weekly and daily notes. Click a cell to open its note, long-press for the day view.",
+  "description": "Life in Weeks calendar: render a grid of your life in weeks over your vault's weekly and daily notes. Click a cell to open its note, long-press for the day view.",
   "author": "Michael Christian Baum",
   "authorUrl": "https://github.com/Micha12323",
   "isDesktopOnly": false

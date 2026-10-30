@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { useEffect } from "react";
+import { Platform } from "obsidian";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { dayDates, localIso, weekKey } from "../core/dates";
 import type { LegendState, TabWeeks } from "../core/types";
 import type { DailyIdx } from "../data/DailyIndex";
+import type { PreviewFn } from "../data/NotePreview";
 import { displayWeekLabel, t, weekdayLabel } from "../i18n";
 import { Palette } from "./Palette";
 
@@ -20,6 +21,7 @@ export function DayPanel({
   weeksData,
   dailyIdx,
   legend,
+  getPreview,
   onOpenDay,
   onOpenWeek,
   onWeekColor,
@@ -31,6 +33,8 @@ export function DayPanel({
   weeksData: TabWeeks;
   dailyIdx: DailyIdx;
   legend: LegendState;
+  /** Desktop-Hover: Kurz-Vorschau der Tagesnotiz */
+  getPreview?: PreviewFn;
   /** background=true: Rechts-/Mittelklick → Hintergrund-Tab, Panel bleibt offen */
   onOpenDay: (iso: string, background?: boolean) => void;
   onOpenWeek: (n: number, background?: boolean) => void;
@@ -43,6 +47,36 @@ export function DayPanel({
   const todayIso = localIso(new Date());
   const week = weeksData[weekKey(birthDate, n)];
   const [title, setTitle] = useState(week?.title ?? "");
+
+  // ── Hover-Vorschau eines Tages (nur Desktop) ──
+  const canPreview = !!getPreview && !Platform.isMobile;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState<{ iso: string; top: number } | null>(null);
+  const [preview, setPreview] = useState<{ iso: string; text: string } | null>(null);
+  useEffect(() => {
+    const entry = hover ? dailyIdx[hover.iso] : null;
+    if (!hover || !entry || !getPreview) return;
+    let alive = true;
+    void getPreview(entry.path).then((text) => {
+      if (alive) setPreview({ iso: hover.iso, text });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [hover, dailyIdx, getPreview]);
+  // Rechts neben das Panel, bei Platzmangel links davon; vertikal im Fenster halten
+  useLayoutEffect(() => {
+    const el = previewRef.current;
+    const panel = panelRef.current?.getBoundingClientRect();
+    if (!el || !panel || !hover) return;
+    let left = panel.right + 8;
+    if (left + el.offsetWidth > window.innerWidth - 8) left = Math.max(8, panel.left - el.offsetWidth - 8);
+    const top = Math.max(8, Math.min(hover.top, window.innerHeight - el.offsetHeight - 8));
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+  });
+  const hoverEntry = hover ? dailyIdx[hover.iso] : null;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -59,7 +93,7 @@ export function DayPanel({
 
   return createPortal(
     <div className="lw-modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="lw-modal lw-day-panel">
+      <div className="lw-modal lw-day-panel" ref={panelRef}>
         <div className="lw-qe-head">
           <div>
             <div className="lw-qe-life">{lb.life}</div>
@@ -84,7 +118,12 @@ export function DayPanel({
                   onOpenDay(d.iso, true);
                 }}
                 onAuxClick={(e) => e.button === 1 && onOpenDay(d.iso, true)}
-                title={`${entry ? t("dayOpenTitle") : t("dayCreateTitle")} – ${t("bgHint")}`}
+                onMouseEnter={(e) => {
+                  if (canPreview && entry) setHover({ iso: d.iso, top: e.currentTarget.getBoundingClientRect().top });
+                }}
+                onMouseLeave={() => setHover(null)}
+                // Mit Vorschau steht der Hinweis in der Vorschau, sonst als normaler Tooltip
+                title={canPreview && entry ? undefined : `${entry ? t("dayOpenTitle") : t("dayCreateTitle")} – ${t("bgHint")}`}
               >
                 <span className="lw-day-dot" style={{ background: entry?.color ?? "transparent" }} />
                 <span className="lw-day-label">{weekdayLabel(d.date)}</span>
@@ -104,6 +143,18 @@ export function DayPanel({
             );
           })}
         </div>
+
+        {hover && hoverEntry && (
+          <div className="lw-day-preview" ref={previewRef}>
+            <div className="lw-tip-title">{hoverEntry.title || weekdayLabel(days.find((d) => d.iso === hover.iso)!.date)}</div>
+            {preview?.iso === hover.iso ? (
+              <div className="lw-day-preview-text">{preview.text || t("previewEmpty")}</div>
+            ) : (
+              <div className="lw-day-preview-text lw-muted">…</div>
+            )}
+            <div className="lw-day-preview-hint">{t("bgHint")}</div>
+          </div>
+        )}
 
         <div className="lw-day-week-edit">
           <Palette legend={legend} value={week?.color} onPick={(c) => onWeekColor(n, c)} />
