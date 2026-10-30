@@ -2,6 +2,8 @@
 
 A "Life in Weeks" grid rendered over the weekly and daily notes in your vault. Each cell is one week of your life – click it to open or create the matching note. Great for journaling and for tracking separate timelines (children, pets, relationships, jobs …) side by side.
 
+**New: now with mouse-over** – hover a week to preview its note, hover a day in the day view to preview the daily note (desktop).
+
 - Click a cell to open its note, long-press for the day view
 - Set weekly colors and titles
 - Multi-select to edit many weeks at once
